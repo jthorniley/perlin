@@ -15,10 +15,6 @@ impl Vec2 {
         Vec2 { x, y }
     }
 
-    fn dot(&self, other: &Vec2) -> f32 {
-        return self.x * other.x + self.y * other.y;
-    }
-
     fn negate_add_dot(&self, a: f32, b: f32, other: &Vec2) -> f32 {
         return (a - self.x) * other.x + (b - self.y) * other.y;
     }
@@ -44,28 +40,27 @@ fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
     (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0
 }
 
-fn rect(
-    x: usize,
-    y: usize,
-    nx: usize,
-    ny: usize,
-    buf: &mut Vec<f32>,
-    offset: usize,
-    stride: usize,
-) {
+fn square(x: usize, y: usize, scale: usize, buf: &mut Vec<f32>, offset: usize, stride: usize) {
     let corners = [
         corner_vector(x, y),
         corner_vector(x, y + 1),
         corner_vector(x + 1, y),
         corner_vector(x + 1, y + 1),
     ];
-    let dx = 1.0 / nx as f32;
-    let dy = 1.0 / ny as f32;
-    let mut pixel = Vec2::new(dx / 2.0, dy / 2.0);
+    let step = 1.0 / scale as f32;
+    let mut pixel = Vec2::new(step / 2.0, step / 2.0);
 
-    for i in 0..ny {
-        for j in 0..nx {
+    for i in 0..scale {
+        for j in 0..scale {
             let idx = j + stride * i + offset;
+
+            if j != 0 && idx % stride == 0 {
+                // If idx % stride = 0, then this pixel is at the start
+                // of a row, which should only happen if j == 0 - if j isn't
+                // 0, this means we have wrapped around the side of the image,
+                // and can stop adding to the buffer for the current row
+                break;
+            }
 
             let p1 = pixel.negate_add_dot(0.0, 0.0, &corners[0]);
             let p2 = pixel.negate_add_dot(0.0, 1.0, &corners[1]);
@@ -80,33 +75,25 @@ fn rect(
                 buf[idx] = interp;
             }
 
-            pixel.translate_x(dx);
+            pixel.translate_x(step);
         }
-        pixel.translate_y(dy);
-        pixel.translate_x(-1.0);
+        pixel.translate_y(step);
+        pixel.x = step / 2.0;
     }
 }
 
 pub fn noise_2d(width: usize, height: usize, scale: usize) -> Vec<f32> {
     let mut buf = vec![0.0; width * height];
 
-    let rx = width / scale;
-    let ry = height / scale;
+    let rx = (width - 1) / scale + 1;
+    let ry = (height - 1) / scale + 1;
 
     let xstride = scale;
     let ystride = width * scale;
 
     for y in 0..ry {
         for x in 0..rx {
-            rect(
-                x,
-                y,
-                scale,
-                scale,
-                &mut buf,
-                x * xstride + y * ystride,
-                width,
-            )
+            square(x, y, scale, &mut buf, x * xstride + y * ystride, width)
         }
     }
 
