@@ -44,7 +44,7 @@ fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
     (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0
 }
 
-pub fn rect(
+fn rect(
     x: usize,
     y: usize,
     nx: usize,
