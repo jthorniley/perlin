@@ -1,21 +1,12 @@
 use image::save_buffer;
-use perlinrs::perlin_cube;
+use perlinrs::noise_2d;
 
 pub fn main() {
-    let mut result = vec![0; 10 * 40 * 10 * 40];
-    for i in 0..10usize {
-        for j in 0..10usize {
-            perlin_cube(
-                i as i16,
-                j as i16,
-                40,
-                40,
-                &mut result,
-                i * 40 + j * 16000,
-                400,
-            );
-        }
-    }
-    save_buffer("./output.png", &result, 400, 400, image::ColorType::L8)
+    let result = noise_2d(400, 400, 40);
+    let imgbuf = result
+        .iter()
+        .map(|x| ((x + 1.0) * 128.0) as u8)
+        .collect::<Vec<u8>>();
+    save_buffer("./output.png", &imgbuf, 400, 400, image::ColorType::L8)
         .expect("Error saving image");
 }
