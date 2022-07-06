@@ -1,6 +1,6 @@
-use std::{collections::hash_map::DefaultHasher, hash::Hasher, ops::Add};
+use std::{collections::hash_map::DefaultHasher, hash::Hasher};
 
-use ndarray::{ArrayBase, DataMut, Dim, RawData};
+use ndarray::{ArrayBase, DataMut, Dim};
 
 pub struct Vec2 {
     x: f32,
@@ -107,10 +107,10 @@ pub fn hash(value: usize) -> u8 {
     let key1: u32 = 0x6373cd28;
 
     let mut keyed = value as u32;
-    keyed ^= keyed.rotate_left(3) ^ keyed.rotate_left(31) ^ key1;
-    keyed ^= keyed.rotate_left(4) ^ keyed.rotate_left(15) ^ key;
+    keyed ^= keyed.rotate_left(3) ^ keyed.rotate_left(17) ^ key;
+    keyed ^= keyed.rotate_left(5) ^ keyed.rotate_left(27) ^ key1;
 
-    keyed as u8
+    keyed.rotate_right((value & 0xf) as u32) as u8
 }
 
 pub fn new_square<E: From<f32> + Copy, S: DataMut<Elem = E>>(

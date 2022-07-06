@@ -1,11 +1,9 @@
-#[macro_use]
-extern crate ndarray;
-
-use std::{error::Error, ops::Add};
+use std::error::Error;
 
 use image::*;
 use ndarray::prelude::*;
-use perlinrs::{hash, new_square};
+use ndarray::Array;
+use perlinrs::new_square;
 
 /*
 pub fn main() {
@@ -27,9 +25,6 @@ pub fn main() {
 pub fn main() -> Result<(), Box<dyn Error>> {
     let w = 400;
     let h = 200;
-
-    let hashes = Array::range(0., 100., 1.).map(|x| hash(*x as usize));
-    println!("Hash values: {:?}", hashes);
 
     let mut img = Array::zeros([h, w]);
 
