@@ -1,4 +1,6 @@
-use std::{collections::hash_map::DefaultHasher, hash::Hasher};
+use std::{collections::hash_map::DefaultHasher, hash::Hasher, ops::Add};
+
+use ndarray::{ArrayBase, DataMut, Dim, RawData};
 
 pub struct Vec2 {
     x: f32,
@@ -98,6 +100,23 @@ pub fn noise_2d(width: usize, height: usize, scale: usize) -> Vec<f32> {
     }
 
     buf
+}
+
+pub fn hash(value: usize) -> u8 {
+    let key: u32 = 0x730d319b;
+    let key1: u32 = 0x6373cd28;
+
+    let mut keyed = value as u32;
+    keyed ^= keyed.rotate_left(3) ^ keyed.rotate_left(31) ^ key1;
+    keyed ^= keyed.rotate_left(4) ^ keyed.rotate_left(15) ^ key;
+
+    keyed as u8
+}
+
+pub fn new_square<E: From<f32> + Copy, S: DataMut<Elem = E>>(
+    buffer: &mut ArrayBase<S, Dim<[usize; 2]>>,
+) {
+    buffer.map_inplace(|x| *x = 100.0f32.into());
 }
 
 #[cfg(test)]
