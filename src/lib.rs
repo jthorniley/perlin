@@ -108,7 +108,8 @@ fn hash(value: u32) -> u8 {
 
     let mut keyed = value;
     keyed ^= keyed.rotate_left(3) ^ keyed.rotate_left(17) ^ key;
-    keyed ^= keyed.rotate_left(5) ^ keyed.rotate_left(27) ^ key1;
+    keyed ^= keyed.rotate_left(4) ^ keyed.rotate_left(27) ^ key1;
+    keyed ^= keyed.rotate_left(6) ^ keyed.rotate_left(21) ^ key1;
 
     keyed.rotate_right((value & 0xf) as u32) as u8
 }

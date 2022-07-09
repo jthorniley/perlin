@@ -28,13 +28,14 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let mut img = Array::zeros([h, w]);
 
-    img.exact_chunks_mut([10, 10])
-        .into_iter()
-        .for_each(|mut arg| {
-            arg.perlin_inplace(0, 90);
-        });
+    (0..20usize).into_iter().for_each(|x| {
+        (0..40usize).into_iter().for_each(|y| {
+            img.slice_mut(s![10 * x..10 * x + 10, 10 * y..10 * y + 10])
+                .perlin_inplace(y as u32, x as u32)
+        })
+    });
 
-    let result = img.map(|value: &f32| (value.clamp(0.0, 1.0) * 255.0) as u8);
+    let result = img.map(|value: &f32| ((value / 2.0 + 0.5).clamp(0.0, 1.0) * 255.0) as u8);
 
     save_buffer(
         "./output.png",
