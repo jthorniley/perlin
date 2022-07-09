@@ -1,26 +1,8 @@
 use std::error::Error;
 
 use image::*;
-use ndarray::prelude::*;
 use ndarray::Array;
-use perlinrs::Perlin;
-
-/*
-pub fn main() {
-    let w = 400u32;
-    let h = 400u32;
-
-    let a = noise_2d(w as usize, h as usize, 80);
-    let b = noise_2d(w as usize, h as usize, 14);
-    let imgbuf = a
-        .iter()
-        .zip(b.iter())
-        .map(|(a, b)| a * 0.8 + b * 0.1)
-        .map(|x| ((x + 1.0) * 128.0) as u8)
-        .collect::<Vec<u8>>();
-    save_buffer("./output.png", &imgbuf, w, h, image::ColorType::L8).expect("Error saving image");
-}
-*/
+use perlinrs::AddPerlinNoise;
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let w = 400;
@@ -28,12 +10,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let mut img = Array::zeros([h, w]);
 
-    (0..20usize).into_iter().for_each(|x| {
-        (0..40usize).into_iter().for_each(|y| {
-            img.slice_mut(s![10 * x..10 * x + 10, 10 * y..10 * y + 10])
-                .perlin_inplace(y as u32, x as u32)
-        })
-    });
+    img.add_perlin_noise(13);
 
     let result = img.map(|value: &f32| ((value / 2.0 + 0.5).clamp(0.0, 1.0) * 255.0) as u8);
 
