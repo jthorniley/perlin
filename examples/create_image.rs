@@ -3,7 +3,7 @@ use std::error::Error;
 use image::*;
 use ndarray::prelude::*;
 use ndarray::Array;
-use perlinrs::new_square;
+use perlinrs::Perlin;
 
 /*
 pub fn main() {
@@ -28,7 +28,12 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let mut img = Array::zeros([h, w]);
 
-    new_square(&mut img.slice_mut(s![20..30, 5..200]));
+    img.exact_chunks_mut([10, 10])
+        .into_iter()
+        .for_each(|mut arg| {
+            arg.perlin_inplace(0, 90);
+        });
+
     let result = img.map(|value: &f32| (value.clamp(0.0, 1.0) * 255.0) as u8);
 
     save_buffer(

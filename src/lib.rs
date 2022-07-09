@@ -102,21 +102,62 @@ pub fn noise_2d(width: usize, height: usize, scale: usize) -> Vec<f32> {
     buf
 }
 
-pub fn hash(value: usize) -> u8 {
+fn hash(value: u32) -> u8 {
     let key: u32 = 0x730d319b;
     let key1: u32 = 0x6373cd28;
 
-    let mut keyed = value as u32;
+    let mut keyed = value;
     keyed ^= keyed.rotate_left(3) ^ keyed.rotate_left(17) ^ key;
     keyed ^= keyed.rotate_left(5) ^ keyed.rotate_left(27) ^ key1;
 
     keyed.rotate_right((value & 0xf) as u32) as u8
 }
 
-pub fn new_square<E: From<f32> + Copy, S: DataMut<Elem = E>>(
-    buffer: &mut ArrayBase<S, Dim<[usize; 2]>>,
-) {
-    buffer.map_inplace(|x| *x = 100.0f32.into());
+fn random_vector(x: u32, y: u32) -> Vec2 {
+    let hash_value = hash(x | y.rotate_left(16));
+    let direction = hash_value as f32 / 255.0;
+    Vec2::from_direction(direction * std::f32::consts::PI * 2.0)
+}
+
+pub trait Perlin {
+    fn perlin_inplace(&mut self, x: u32, y: u32);
+}
+
+impl<E, S> Perlin for ArrayBase<S, Dim<[usize; 2]>>
+where
+    E: From<f32> + Copy,
+    S: DataMut<Elem = E>,
+{
+    fn perlin_inplace(&mut self, x: u32, y: u32) {
+        let corners = [
+            random_vector(x, y),
+            random_vector(x, y + 1),
+            random_vector(x + 1, y),
+            random_vector(x + 1, y + 1),
+        ];
+
+        if let [nrows, ncols] = self.shape() {
+            let vert_pixel_size = 1.0 / *nrows as f32;
+            let horz_pixel_size = 1.0 / *ncols as f32;
+
+            self.indexed_iter_mut().for_each(|((i, j), val)| {
+                let pixel = Vec2::new(
+                    horz_pixel_size / 2.0 + horz_pixel_size * j as f32,
+                    vert_pixel_size / 2.0 + vert_pixel_size * i as f32,
+                );
+                let p1 = pixel.negate_add_dot(0.0, 0.0, &corners[0]);
+                let p2 = pixel.negate_add_dot(0.0, 1.0, &corners[1]);
+                let p3 = pixel.negate_add_dot(1.0, 0.0, &corners[2]);
+                let p4 = pixel.negate_add_dot(1.0, 1.0, &corners[3]);
+
+                let interp1 = interpolate(p1, p2, pixel.y);
+                let interp2 = interpolate(p3, p4, pixel.y);
+                let interp = interpolate(interp1, interp2, pixel.x);
+
+                *val = interp.into();
+            });
+        }
+    }
 }
 
 #[cfg(test)]
