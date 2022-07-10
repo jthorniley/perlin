@@ -1,4 +1,4 @@
-use std::num::Wrapping;
+use std::{num::Wrapping, ops::Add};
 
 use ndarray::{prelude::*, DataMut};
 
@@ -38,27 +38,28 @@ fn hash(value: u32) -> u8 {
     keyed.rotate_right((value & 0xf) as u32) as u8
 }
 
-fn random_vector(row_index: usize, col_index: usize) -> Vec2 {
-    let hash_value = hash(row_index as u32 | (col_index as u32).rotate_left(16));
+fn random_vector(x: usize, y: usize) -> Vec2 {
+    let hash_value = hash(x as u32 | (y as u32).rotate_left(16));
     let direction = hash_value as f32 / 255.0;
     Vec2::from_direction(direction * std::f32::consts::PI * 2.0)
 }
 
-pub trait Perlin {
-    fn perlin_inplace(&mut self, row_index: usize, col_index: usize, scale: usize);
+trait PerlinNoiseSquare {
+    /// Insrt a single square of perlin noise.
+    fn perlin_noise_square(&mut self, x_offset: usize, y_offset: usize, scale: usize, amp: f32);
 }
 
-impl<E, S> Perlin for ArrayBase<S, Dim<[usize; 2]>>
+impl<E, S> PerlinNoiseSquare for ArrayBase<S, Dim<[usize; 2]>>
 where
-    E: From<f32> + Copy,
+    E: From<f32> + Add<Output = E> + Copy,
     S: DataMut<Elem = E>,
 {
-    fn perlin_inplace(&mut self, row_index: usize, col_index: usize, scale: usize) {
+    fn perlin_noise_square(&mut self, x_offset: usize, y_offset: usize, scale: usize, amp: f32) {
         let corners = [
-            random_vector(row_index, col_index),
-            random_vector(row_index, col_index + 1),
-            random_vector(row_index + 1, col_index),
-            random_vector(row_index + 1, col_index + 1),
+            random_vector(x_offset, y_offset),
+            random_vector(x_offset, y_offset + 1),
+            random_vector(x_offset + 1, y_offset),
+            random_vector(x_offset + 1, y_offset + 1),
         ];
 
         let vert_pixel_size = 1.0 / scale as f32;
@@ -70,15 +71,15 @@ where
                 vert_pixel_size / 2.0 + vert_pixel_size * i as f32,
             );
             let p1 = pixel.negate_add_dot(0.0, 0.0, &corners[0]);
-            let p2 = pixel.negate_add_dot(1.0, 0.0, &corners[1]);
-            let p3 = pixel.negate_add_dot(0.0, 1.0, &corners[2]);
+            let p2 = pixel.negate_add_dot(0.0, 1.0, &corners[1]);
+            let p3 = pixel.negate_add_dot(1.0, 0.0, &corners[2]);
             let p4 = pixel.negate_add_dot(1.0, 1.0, &corners[3]);
 
-            let interp1 = interpolate(p1, p2, pixel.x);
-            let interp2 = interpolate(p3, p4, pixel.x);
-            let interp = interpolate(interp1, interp2, pixel.y);
+            let interp1 = interpolate(p1, p2, pixel.y);
+            let interp2 = interpolate(p3, p4, pixel.y);
+            let interp = interpolate(interp1, interp2, pixel.x);
 
-            *val = interp.into();
+            *val = *val + (amp * interp / 2.0).into();
         });
     }
 }
@@ -87,15 +88,16 @@ pub trait AddPerlinNoise {
     ///
     /// scale: The number of pixel between consecutive lattice
     ///        nodes used to generate the noise.
-    fn add_perlin_noise(&mut self, scale: usize);
+    /// amp: Amplitude of the noise (difference between min and max peaks)\
+    fn add_perlin_noise(&mut self, scale: usize, amp: f32);
 }
 
 impl<E, S> AddPerlinNoise for ArrayBase<S, Dim<[usize; 2]>>
 where
-    E: From<f32> + Copy,
+    E: From<f32> + Add<Output = E> + Copy,
     S: DataMut<Elem = E>,
 {
-    fn add_perlin_noise(&mut self, scale: usize) {
+    fn add_perlin_noise(&mut self, scale: usize, amp: f32) {
         if let [rows, cols] = self.shape() {
             let (rows, cols) = (*rows, *cols);
 
@@ -104,7 +106,7 @@ where
                     let row_end = rows.min(row_index + scale);
                     let col_end = cols.min(col_index + scale);
                     let mut slice = self.slice_mut(s![row_index..row_end, col_index..col_end]);
-                    slice.perlin_inplace(row_index / scale, col_index / scale, scale);
+                    slice.perlin_noise_square(col_index / scale, row_index / scale, scale, amp);
                 }
             }
         }

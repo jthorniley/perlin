@@ -5,14 +5,16 @@ use ndarray::Array;
 use perlinrs::AddPerlinNoise;
 
 pub fn main() -> Result<(), Box<dyn Error>> {
-    let cols = 400;
-    let rows = 200;
+    let cols = 1200;
+    let rows = 1000;
 
-    let mut img = Array::zeros([rows, cols]);
+    let mut img = Array::zeros([rows, cols]) + 0.7;
 
-    img.add_perlin_noise(15);
+    img.add_perlin_noise(20, 0.4);
+    img.add_perlin_noise(3, 0.4);
+    img.add_perlin_noise(6, 0.2);
 
-    let result = img.map(|value: &f32| ((value / 2.0 + 0.5).clamp(0.0, 1.0) * 255.0) as u8);
+    let result = img.map(|value: &f32| (value.clamp(0.0, 1.0) * 255.0) as u8);
 
     save_buffer(
         "./output.png",
