@@ -2,6 +2,22 @@ use std::{num::Wrapping, ops::Add};
 
 use ndarray::{prelude::*, DataMut};
 
+fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
+    (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0
+}
+
+fn hash(value: u32) -> u8 {
+    let key: u32 = 0x730d319b;
+    let key1: u32 = 0x6373cd28;
+
+    let mut keyed = (Wrapping(value) * Wrapping(key)).0;
+    keyed ^= keyed.rotate_left(3) ^ keyed.rotate_left(17);
+    keyed ^= keyed.rotate_left(4) ^ keyed.rotate_left(27) ^ key1;
+    keyed ^= keyed.rotate_left(6) ^ keyed.rotate_left(21) ^ key1;
+
+    keyed.rotate_right((value & 0xf) as u32) as u8
+}
+
 pub struct Vec2 {
     x: f32,
     y: f32,
@@ -21,21 +37,6 @@ impl Vec2 {
     fn negate_add_dot(&self, a: f32, b: f32, other: &Vec2) -> f32 {
         return (a - self.x) * other.x + (b - self.y) * other.y;
     }
-}
-
-fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
-    (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0
-}
-fn hash(value: u32) -> u8 {
-    let key: u32 = 0x730d319b;
-    let key1: u32 = 0x6373cd28;
-
-    let mut keyed = (Wrapping(value) * Wrapping(key)).0;
-    keyed ^= keyed.rotate_left(3) ^ keyed.rotate_left(17);
-    keyed ^= keyed.rotate_left(4) ^ keyed.rotate_left(27) ^ key1;
-    keyed ^= keyed.rotate_left(6) ^ keyed.rotate_left(21) ^ key1;
-
-    keyed.rotate_right((value & 0xf) as u32) as u8
 }
 
 fn random_vector(x: usize, y: usize) -> Vec2 {
