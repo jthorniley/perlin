@@ -4,13 +4,14 @@ use ndarray::{prelude::*, DataMut};
 
 /// Interpolate between two values according to a weight.
 ///
-/// Calculates a value somewhere inbetween `a0` and `a1`,
+/// Calculates a value somewhere between `a0` and `a1`,
 /// according to the value of `w`. If `w` is close to 1, the
 /// result is close to `a1`, if `w` is close to 0, the result
 /// is close to `a0`.
 ///
-/// This uses the 5th order smoothstep function:
-/// https://en.wikipedia.org/wiki/Smoothstep#5th-order_equation
+/// This uses the 5th order [smoothstep] function.
+///
+/// [smoothstep]: https://en.wikipedia.org/wiki/Smoothstep#5th-order_equation
 fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
     (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0
 }
@@ -22,9 +23,10 @@ fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
 /// consecutive inputs) but deterministic (calling this function
 /// with the same input always returns the same result).
 ///
-/// This is a cheap rotate-xor-prime hash function from here:
+/// This is a cheap rotate-xor-prime hash function as described
+/// by this [web page].
 ///
-/// https://www.gkbrk.com/wiki/avalanche-diagram/
+/// [web page]: https://www.gkbrk.com/wiki/avalanche-diagram/
 fn hash(value: u32) -> u8 {
     let mut value = Wrapping(value);
     value *= Wrapping(7919u32);
