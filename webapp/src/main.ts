@@ -1,5 +1,8 @@
 import './style.css'
+import perlinrs, { test_fn } from "perlinrs-web";
 
+await perlinrs();
+console.log({ test: test_fn() });
 const app = document.querySelector<HTMLDivElement>('#app')!
 
 app.innerHTML = `
