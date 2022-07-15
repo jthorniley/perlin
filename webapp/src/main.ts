@@ -1,8 +1,11 @@
 import './style.css'
-import perlinrs, { test_fn } from "perlinrs-web";
+import perlinrs, { PerlinNoise } from "perlinrs-web";
 
 await perlinrs();
-console.log({ test: test_fn() });
+
+const noise = new PerlinNoise();
+console.log(noise.raw_data())
+
 const app = document.querySelector<HTMLDivElement>('#app')!
 
 app.innerHTML = `
