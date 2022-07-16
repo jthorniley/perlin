@@ -1,5 +1,6 @@
-use js_sys::{ArrayBuffer, Float32Array, WebAssembly::Memory};
+use js_sys::{Float32Array, WebAssembly::Memory};
 use ndarray::{Array, Dim};
+use perlinrs::AddPerlinNoise;
 use wasm_bindgen::{memory, prelude::*, JsCast};
 
 #[wasm_bindgen]
@@ -24,6 +25,10 @@ impl ImageGenerator {
             self.data.len() as u32,
         );
         slice.into()
+    }
+
+    pub fn add_perlin_noise(&mut self, scale: usize, amp: f32) {
+        self.data.add_perlin_noise(scale, amp);
     }
 }
 
