@@ -1,7 +1,7 @@
 import './style.css'
-import perlinrs, { PerlinNoise } from "perlinrs-web";
+import perlinrs, { ImageGenerator } from "perlinrs-web";
 
 await perlinrs();
 
-const noise = new PerlinNoise();
-console.log({ data: noise.get_data() });
+const noise = new ImageGenerator(20, 30);
+console.log({ data: noise.as_array() });
