@@ -1,4 +1,4 @@
-use js_sys::{ArrayBuffer, Uint8Array, WebAssembly::Memory};
+use js_sys::{Uint8Array, WebAssembly::Memory};
 use wasm_bindgen::{memory, prelude::*, JsCast};
 
 #[wasm_bindgen]
@@ -21,13 +21,4 @@ impl PerlinNoise {
         let slice = Uint8Array::new(&m.buffer());
         slice.slice(begin as u32, begin as u32 + 100).into()
     }
-
-    pub fn memory(&self) -> JsValue {
-        memory()
-    }
-    pub fn raw_data(&self) -> *const u8 {
-        self.data.as_ptr()
-    }
-
-    pub fn input(&self, value: &JsValue) {}
 }
