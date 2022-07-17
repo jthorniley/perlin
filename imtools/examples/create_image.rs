@@ -1,7 +1,10 @@
 use std::error::Error;
 
 use image::*;
-use imtools::{perlin::Perlin, Grayscale, MapToRgba};
+use imtools::{
+    cmaps::{Grayscale, MapToRgba},
+    perlin::Perlin,
+};
 use ndarray::{Array, Dim};
 
 pub fn main() -> Result<(), Box<dyn Error>> {

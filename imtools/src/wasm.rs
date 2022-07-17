@@ -1,19 +1,18 @@
-use crate::imggen::AddPerlinNoise;
 use js_sys::{Float32Array, WebAssembly::Memory};
 use ndarray::{Array, Dim};
 use wasm_bindgen::{memory, prelude::*, JsCast};
 
 #[wasm_bindgen]
-pub struct ImageGenerator {
+pub struct ScalarImage {
     data: Array<f32, Dim<[usize; 2]>>,
 }
 
 #[wasm_bindgen]
-impl ImageGenerator {
+impl ScalarImage {
     #[wasm_bindgen(constructor)]
-    pub fn new(width: usize, height: usize) -> ImageGenerator {
+    pub fn new(width: usize, height: usize) -> ScalarImage {
         let data = Array::zeros((height, width));
-        ImageGenerator { data }
+        ScalarImage { data }
     }
 
     /// Get the underlying array of data for the image.
@@ -27,10 +26,25 @@ impl ImageGenerator {
             self.data.len() as u32,
         )
     }
+}
 
-    // Add randomly generated perlin noise to image
-    #[wasm_bindgen(js_name = "addPerlinNoise")]
-    pub fn add_perlin_noise(&mut self, scale: usize, amp: f32) {
-        self.data.add_perlin_noise(scale, amp);
+
+#[wasm_bindgen]
+pub struct Perlin {
+    inner: crate::perlin::Perlin<f32>
+}
+
+#[wasm_bindgen]
+impl Perlin {
+
+    #[wasm_bindgen(constructor)]
+    pub fn new(scale: usize, amp: f32) -> Perlin {
+        Perlin { inner: crate::perlin::Perlin::<f32>::new(scale, amp) }
+    }
+
+
+    #[wasm_bindgen(js_name="addToImage")]
+    pub fn add_to_image(&self, image: &mut ScalarImage) {
+        self.inner.add_to_image(&mut image.data)
     }
 }

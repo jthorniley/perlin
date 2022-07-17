@@ -1,16 +1,17 @@
-import imggen, { ImageGenerator } from "imtools";
+import imggen, { ScalarImage, Perlin } from "imtools";
 
 await imggen();
 
 const WIDTH = 1000;
 const HEIGHT = 500;
-const imageGenerator = new ImageGenerator(WIDTH, HEIGHT);
-imageGenerator.addPerlinNoise(200, 0.4);
-imageGenerator.addPerlinNoise(140, 0.1);
-imageGenerator.addPerlinNoise(90, 0.1);
-imageGenerator.addPerlinNoise(70, 0.1);
-imageGenerator.addPerlinNoise(40, 0.04);
-imageGenerator.addPerlinNoise(10, 0.02);
+const imageGenerator = new ScalarImage(WIDTH, HEIGHT);
+
+new Perlin(200, 1.1).addToImage(imageGenerator);
+new Perlin(140, 0.1).addToImage(imageGenerator);
+new Perlin(90, 0.1).addToImage(imageGenerator);
+new Perlin(70, 0.1).addToImage(imageGenerator);
+new Perlin(40, 0.04).addToImage(imageGenerator);
+new Perlin(10, 0.02).addToImage(imageGenerator);
 
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
