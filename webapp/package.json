@@ -12,6 +12,6 @@
     "vite": "^2.9.9"
   },
   "workspaces": [
-    "../perlinrs-web/pkg"
+    "../imggen/pkg"
   ]
 }

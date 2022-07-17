@@ -1,9 +1,9 @@
-import perlinrs, { ImageGenerator } from "perlinrs-web";
+import imggen, { ImageGenerator } from "imggen-rs";
 
-await perlinrs();
+await imggen();
 
-const WIDTH = 500;
-const HEIGHT = 600;
+const WIDTH = 1000;
+const HEIGHT = 500;
 const imageGenerator = new ImageGenerator(WIDTH, HEIGHT);
 imageGenerator.addPerlinNoise(200, 0.4);
 imageGenerator.addPerlinNoise(140, 0.1);
@@ -29,4 +29,5 @@ imageGenerator.imageData().forEach(element => {
     imageData.data[i + 3] = 255;
     i = i + 4;
 });
+
 ctx.putImageData(imageData, 0, 0);

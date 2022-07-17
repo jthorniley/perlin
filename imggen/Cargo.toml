@@ -11,3 +11,10 @@ ndarray = "*"
 
 [dev-dependencies]
 image = "*"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "*"
+js-sys = "*"
+
+[lib]
+crate-type = ['cdylib', 'rlib']

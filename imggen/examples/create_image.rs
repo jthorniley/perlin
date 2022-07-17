@@ -1,8 +1,8 @@
 use std::error::Error;
 
 use image::*;
+use imggen_rs::AddPerlinNoise;
 use ndarray::Array;
-use perlinrs::AddPerlinNoise;
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let cols = 1200;

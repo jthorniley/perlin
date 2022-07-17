@@ -1,6 +1,6 @@
+use crate::imggen::AddPerlinNoise;
 use js_sys::{Float32Array, WebAssembly::Memory};
 use ndarray::{Array, Dim};
-use perlinrs::AddPerlinNoise;
 use wasm_bindgen::{memory, prelude::*, JsCast};
 
 #[wasm_bindgen]
