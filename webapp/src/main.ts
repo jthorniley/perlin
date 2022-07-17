@@ -4,13 +4,13 @@ await perlinrs();
 
 const WIDTH = 500;
 const HEIGHT = 600;
-const noise = new ImageGenerator(WIDTH, HEIGHT);
-noise.add_perlin_noise(200, 0.4);
-noise.add_perlin_noise(140, 0.1);
-noise.add_perlin_noise(90, 0.1);
-noise.add_perlin_noise(70, 0.1);
-noise.add_perlin_noise(40, 0.04);
-noise.add_perlin_noise(10, 0.02);
+const imageGenerator = new ImageGenerator(WIDTH, HEIGHT);
+imageGenerator.addPerlinNoise(200, 0.4);
+imageGenerator.addPerlinNoise(140, 0.1);
+imageGenerator.addPerlinNoise(90, 0.1);
+imageGenerator.addPerlinNoise(70, 0.1);
+imageGenerator.addPerlinNoise(40, 0.04);
+imageGenerator.addPerlinNoise(10, 0.02);
 
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -21,7 +21,7 @@ const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 const imageData = ctx.createImageData(WIDTH, HEIGHT);
 
 let i = 0;
-(noise.as_array() as Float32Array).forEach(element => {
+imageGenerator.imageData().forEach(element => {
     const level = Math.max(Math.min(element + 0.5, 1.0), 0.0) * 255.0;
     imageData.data[i] = level;
     imageData.data[i + 1] = level;
