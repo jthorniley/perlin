@@ -1,4 +1,5 @@
 pub mod cmaps;
+pub mod perlin;
 mod imggen;
 
 pub use cmaps::{Grayscale, MapToRgba};
