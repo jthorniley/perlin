@@ -7,5 +7,7 @@ license = "CC-BY-NC-SA-4.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-image = "*"
 ndarray = "*"
+
+[dev-dependencies]
+image = "*"
