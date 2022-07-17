@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use image::*;
-use imggen_rs::{AddPerlinNoise, Grayscale, MapToRgba};
+use imtools::{AddPerlinNoise, Grayscale, MapToRgba};
 use ndarray::{Array, Dim};
 
 pub fn main() -> Result<(), Box<dyn Error>> {
