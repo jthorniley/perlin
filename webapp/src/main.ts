@@ -1,4 +1,4 @@
-import imggen, { ImageGenerator } from "imggen-rs";
+import imggen, { ImageGenerator } from "imtools";
 
 await imggen();
 
