@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Sub};
 
-use ndarray::{azip, Array, ArrayBase, Axis, Data, Dim, Zip};
+use ndarray::{azip, Array, ArrayBase, Axis, Data, Dim};
 use ndarray_stats::QuantileExt;
 
 pub trait MapImpl {

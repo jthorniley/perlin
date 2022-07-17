@@ -10,11 +10,12 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let mut img: Array<f32, Dim<[usize; 2]>> = Array::zeros([rows, cols]);
 
-    img.add_perlin_noise(200, 0.7);
+    img.add_perlin_noise(400, 0.7);
     img.add_perlin_noise(158, 0.7);
-    img.add_perlin_noise(101, 0.3);
-    img.add_perlin_noise(59, 0.2);
-    img.add_perlin_noise(13, 0.05);
+    img.add_perlin_noise(101, 0.1);
+    img.add_perlin_noise(59, 0.1);
+    img.add_perlin_noise(13, 0.1);
+    img.add_perlin_noise(5, 0.1);
 
     let result = img.map_to_rgba(&Grayscale);
 
