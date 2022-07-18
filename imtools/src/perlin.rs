@@ -3,7 +3,7 @@ use std::num::Wrapping;
 use ndarray::prelude::*;
 use num_traits::Num;
 
-use crate::image_types::{ScalarImageMut, ScalarPixel};
+use crate::image_types::{ScalarImageViewMut, ScalarPixel};
 
 /// Interpolate between two values according to a weight.
 ///
@@ -98,7 +98,7 @@ impl<T: ScalarPixel> Perlin<T> {
         Perlin { scale, amp }
     }
 
-    pub fn add_to_image<'a>(&'a self, image: impl ScalarImageMut<'a, T>) {
+    pub fn add_to_image<'a>(&'a self, image: impl ScalarImageViewMut<'a, T>) {
         let mut view: ArrayViewMut2<'a, T> = image.into();
         if let [rows, cols] = view.shape() {
             let (rows, cols) = (*rows, *cols);
