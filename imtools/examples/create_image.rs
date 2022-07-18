@@ -2,7 +2,7 @@ use std::error::Error;
 
 use image::*;
 use imtools::{
-    cmaps::{Grayscale, MapToRgba},
+    cmaps::{CMap, Grayscale},
     perlin::Perlin,
 };
 use ndarray::{Array, Dim};
@@ -20,7 +20,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     Perlin::new(13, 0.1).add_to_image(&mut img);
     Perlin::new(5, 0.1).add_to_image(&mut img);
 
-    let result = img.map_to_rgba(&Grayscale);
+    let result = Grayscale.cmap(&img);
 
     save_buffer(
         "./output.png",
