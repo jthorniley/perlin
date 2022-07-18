@@ -1,7 +1,10 @@
 use std::error::Error;
 
 use image::*;
-use imtools::{AddPerlinNoise, Grayscale, MapToRgba};
+use imtools::{
+    cmaps::{CMap, Grayscale},
+    perlin::Perlin,
+};
 use ndarray::{Array, Dim};
 
 pub fn main() -> Result<(), Box<dyn Error>> {
@@ -10,14 +13,14 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let mut img: Array<f32, Dim<[usize; 2]>> = Array::zeros([rows, cols]);
 
-    img.add_perlin_noise(400, 0.7);
-    img.add_perlin_noise(158, 0.7);
-    img.add_perlin_noise(101, 0.1);
-    img.add_perlin_noise(59, 0.1);
-    img.add_perlin_noise(13, 0.1);
-    img.add_perlin_noise(5, 0.1);
+    Perlin::new(200, 0.7).add_to_image(&mut img);
+    Perlin::new(158, 0.7).add_to_image(&mut img);
+    Perlin::new(101, 0.1).add_to_image(&mut img);
+    Perlin::new(59, 0.1).add_to_image(&mut img);
+    Perlin::new(13, 0.1).add_to_image(&mut img);
+    Perlin::new(5, 0.1).add_to_image(&mut img);
 
-    let result = img.map_to_rgba(&Grayscale);
+    let result = Grayscale.cmap(&img);
 
     save_buffer(
         "./output.png",

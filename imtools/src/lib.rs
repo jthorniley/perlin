@@ -1,8 +1,6 @@
 pub mod cmaps;
-mod imggen;
-
-pub use cmaps::{Grayscale, MapToRgba};
-pub use imggen::*;
+pub mod image_types;
+pub mod perlin;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm;

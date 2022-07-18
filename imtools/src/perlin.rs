@@ -1,6 +1,8 @@
-use std::{num::Wrapping, ops::Add};
+use std::num::Wrapping;
 
-use ndarray::{prelude::*, DataMut};
+use ndarray::prelude::*;
+
+use crate::image_types::{ScalarImageViewMut, ScalarPixel};
 
 /// Interpolate between two values according to a weight.
 ///
@@ -85,26 +87,36 @@ impl Vertex {
     }
 }
 
-trait PerlinNoiseSquare {
-    /// Add a single lattice square of perlin noise to this array view.
-    ///
-    /// One corner of the square is the supplied `vertex`, the adjacent
-    /// horizontal, vertical and diagonal vertices form a square.
-    ///
-    /// The supplied `scale` indicates how many interpolated data points
-    /// are inserted between the vertices of the lattice.
-    ///
-    /// The `amp` (amplitude) is the max-min noise signal size (i.e. each data
-    /// point will get a noise value somewhere between -amp/2 and amp/2).
-    fn perlin_noise_square(&mut self, vertex: &Vertex, scale: usize, amp: f32);
+pub struct Perlin<T: ScalarPixel> {
+    scale: usize,
+    amp: T,
 }
 
-impl<E, S> PerlinNoiseSquare for ArrayBase<S, Dim<[usize; 2]>>
-where
-    E: From<f32> + Add<Output = E> + Copy,
-    S: DataMut<Elem = E>,
-{
-    fn perlin_noise_square(&mut self, vertex: &Vertex, scale: usize, amp: f32) {
+impl<T: ScalarPixel> Perlin<T> {
+    pub fn new(scale: usize, amp: T) -> Perlin<T> {
+        Perlin { scale, amp }
+    }
+
+    pub fn add_to_image<'a>(&'a self, image: impl ScalarImageViewMut<'a, T>) {
+        let mut view: ArrayViewMut2<'a, T> = image.into();
+        if let [rows, cols] = view.shape() {
+            let (rows, cols) = (*rows, *cols);
+            let mut vertex = Vertex::new(0, 0);
+
+            for row_index in (0..rows).step_by(self.scale) {
+                for col_index in (0..cols).step_by(self.scale) {
+                    let row_end = rows.min(row_index + self.scale);
+                    let col_end = cols.min(col_index + self.scale);
+                    let mut slice = view.slice_mut(s![row_index..row_end, col_index..col_end]);
+                    self.perlin_noise_square(&vertex, &mut slice);
+                    vertex = Vertex::new(vertex.i0 + 1, vertex.i1);
+                }
+                vertex = Vertex::new(0, vertex.i1 + 1);
+            }
+        }
+    }
+
+    fn perlin_noise_square<'a>(&'a self, vertex: &Vertex, slice: &mut ArrayViewMut2<'a, T>) {
         let corners = [
             vertex.vec(),
             Vertex::new(vertex.i0, vertex.i1 + 1).vec(),
@@ -112,60 +124,24 @@ where
             Vertex::new(vertex.i0 + 1, vertex.i1 + 1).vec(),
         ];
 
-        let pixel_size = 1.0 / scale as f32;
+        let pixel_size = 1.0f32 / (self.scale as f32);
+        let half_pixel_size = pixel_size / 2.0f32;
 
-        self.indexed_iter_mut().for_each(|((i, j), val)| {
+        slice.indexed_iter_mut().for_each(|((i, j), val)| {
             let pixel = Vec2::new(
-                pixel_size / 2.0 + pixel_size * j as f32,
-                pixel_size / 2.0 + pixel_size * i as f32,
+                half_pixel_size + pixel_size * (j as f32),
+                half_pixel_size + pixel_size * (i as f32),
             );
-            let p1 = pixel.negate_add_dot(0.0, 0.0, &corners[0]);
-            let p2 = pixel.negate_add_dot(0.0, 1.0, &corners[1]);
-            let p3 = pixel.negate_add_dot(1.0, 0.0, &corners[2]);
-            let p4 = pixel.negate_add_dot(1.0, 1.0, &corners[3]);
+            let p1 = pixel.negate_add_dot(0.0f32, 0.0f32, &corners[0]);
+            let p2 = pixel.negate_add_dot(0.0f32, 1.0f32, &corners[1]);
+            let p3 = pixel.negate_add_dot(1.0f32, 0.0f32, &corners[2]);
+            let p4 = pixel.negate_add_dot(1.0f32, 1.0f32, &corners[3]);
 
             let interp1 = interpolate(p1, p2, pixel.y);
             let interp2 = interpolate(p3, p4, pixel.y);
             let interp = interpolate(interp1, interp2, pixel.x);
 
-            *val = *val + (amp * interp / 2.0).into();
-        });
+            *val = *val + (self.amp * T::from(interp / 2.0f32).unwrap());
+        })
     }
 }
-
-pub trait AddPerlinNoise {
-    /// Add perlin noise (in-place) to this array.
-    ///
-    /// This constructs a lattice over the array with the
-    /// vertices `scale` data points apart. The `amp` parameter
-    /// specifies the magnitude of the noise values added to the
-    /// array.
-    fn add_perlin_noise(&mut self, scale: usize, amp: f32);
-}
-
-impl<E, S> AddPerlinNoise for ArrayBase<S, Dim<[usize; 2]>>
-where
-    E: From<f32> + Add<Output = E> + Copy,
-    S: DataMut<Elem = E>,
-{
-    fn add_perlin_noise(&mut self, scale: usize, amp: f32) {
-        if let [rows, cols] = self.shape() {
-            let (rows, cols) = (*rows, *cols);
-            let mut vertex = Vertex::new(0, 0);
-
-            for row_index in (0..rows).step_by(scale) {
-                for col_index in (0..cols).step_by(scale) {
-                    let row_end = rows.min(row_index + scale);
-                    let col_end = cols.min(col_index + scale);
-                    let mut slice = self.slice_mut(s![row_index..row_end, col_index..col_end]);
-                    slice.perlin_noise_square(&vertex, scale, amp);
-                    vertex = Vertex::new(vertex.i0 + 1, vertex.i1);
-                }
-                vertex = Vertex::new(0, vertex.i1 + 1);
-            }
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {}
