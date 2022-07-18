@@ -3,6 +3,8 @@ use std::num::Wrapping;
 use ndarray::prelude::*;
 use num_traits::Num;
 
+use crate::image_types::Pixel;
+
 /// Interpolate between two values according to a weight.
 ///
 /// Calculates a value somewhere between `a0` and `a1`,
@@ -40,34 +42,25 @@ fn hash(value: u32) -> u8 {
 }
 
 /// Struct for basic 2d vector manipulation.
-pub struct Vec2<Pixel>
-where
-    Pixel: Num,
-{
-    x: Pixel,
-    y: Pixel,
+pub struct Vec2 {
+    x: f32,
+    y: f32,
 }
 
-impl<Pixel> Vec2<Pixel>
-where
-    Pixel: Num + From<f32> + Copy,
-{
+impl Vec2 {
     /// Create a 2d vector from literal values.
-    fn new(x: Pixel, y: Pixel) -> Vec2<Pixel> {
+    fn new(x: f32, y: f32) -> Vec2 {
         Vec2 { x, y }
     }
 
     /// Create a unit length vector from a given direction.
-    fn from_direction(direction: f32) -> Vec2<Pixel> {
+    fn from_direction(direction: f32) -> Vec2 {
         let (x, y) = direction.sin_cos();
-        Vec2 {
-            x: x.into(),
-            y: y.into(),
-        }
+        Vec2 { x, y }
     }
 
     /// Performs [-(self.x, self.y) + (a, b)] <dot> other
-    fn negate_add_dot(&self, a: Pixel, b: Pixel, other: &Vec2<Pixel>) -> Pixel {
+    fn negate_add_dot(&self, a: f32, b: f32, other: &Vec2) -> f32 {
         return (a - self.x) * other.x + (b - self.y) * other.y;
     }
 }
@@ -89,27 +82,24 @@ impl Vertex {
     }
 
     /// Direction vector for the vertex
-    fn vec<Pixel: Num + From<f32> + Copy>(&self) -> Vec2<Pixel> {
+    fn vec(&self) -> Vec2 {
         let direction = self.hash() as f32 / 255.0;
         Vec2::from_direction(direction * std::f32::consts::PI * 2.0)
     }
 }
 
-pub struct Perlin<Pixel: Num> {
+pub struct Perlin<T: Pixel> {
     scale: usize,
-    amp: Pixel,
+    amp: T,
 }
 
-impl<Pixel> Perlin<Pixel>
-where
-    Pixel: Num + From<f32> + Copy,
-{
-    pub fn new(scale: usize, amp: Pixel) -> Perlin<Pixel> {
+impl<T: Pixel> Perlin<T> {
+    pub fn new(scale: usize, amp: T) -> Perlin<T> {
         Perlin { scale, amp }
     }
 
-    pub fn add_to_image<'a>(&'a self, image: impl Into<ArrayViewMut2<'a, Pixel>>) {
-        let mut view: ArrayViewMut2<'a, Pixel> = image.into();
+    pub fn add_to_image<'a>(&'a self, image: impl Into<ArrayViewMut2<'a, T>>) {
+        let mut view: ArrayViewMut2<'a, T> = image.into();
         if let [rows, cols] = view.shape() {
             let (rows, cols) = (*rows, *cols);
             let mut vertex = Vertex::new(0, 0);
@@ -127,7 +117,7 @@ where
         }
     }
 
-    fn perlin_noise_square<'a>(&'a self, vertex: &Vertex, slice: &mut ArrayViewMut2<'a, Pixel>) {
+    fn perlin_noise_square<'a>(&'a self, vertex: &Vertex, slice: &mut ArrayViewMut2<'a, T>) {
         let corners = [
             vertex.vec(),
             Vertex::new(vertex.i0, vertex.i1 + 1).vec(),
@@ -135,24 +125,24 @@ where
             Vertex::new(vertex.i0 + 1, vertex.i1 + 1).vec(),
         ];
 
-        let pixel_size: Pixel = Pixel::one() / (self.scale as f32).into();
-        let half_pixel_size: Pixel = pixel_size / 2.0.into();
+        let pixel_size = 1.0f32 / (self.scale as f32);
+        let half_pixel_size = pixel_size / 2.0f32;
 
         slice.indexed_iter_mut().for_each(|((i, j), val)| {
             let pixel = Vec2::new(
-                half_pixel_size + pixel_size * (j as f32).into(),
-                half_pixel_size + pixel_size * (i as f32).into(),
+                half_pixel_size + pixel_size * (j as f32),
+                half_pixel_size + pixel_size * (i as f32),
             );
-            let p1 = pixel.negate_add_dot(Pixel::zero(), Pixel::zero(), &corners[0]);
-            let p2 = pixel.negate_add_dot(Pixel::zero(), Pixel::one(), &corners[1]);
-            let p3 = pixel.negate_add_dot(Pixel::one(), Pixel::zero(), &corners[2]);
-            let p4 = pixel.negate_add_dot(Pixel::one(), Pixel::one(), &corners[3]);
+            let p1 = pixel.negate_add_dot(0.0f32, 0.0f32, &corners[0]);
+            let p2 = pixel.negate_add_dot(0.0f32, 1.0f32, &corners[1]);
+            let p3 = pixel.negate_add_dot(1.0f32, 0.0f32, &corners[2]);
+            let p4 = pixel.negate_add_dot(1.0f32, 1.0f32, &corners[3]);
 
             let interp1 = interpolate(p1, p2, pixel.y);
             let interp2 = interpolate(p3, p4, pixel.y);
             let interp = interpolate(interp1, interp2, pixel.x);
 
-            *val = *val + (self.amp * interp / 2.0.into()).into();
+            *val = *val + (self.amp * T::from(interp / 2.0f32).unwrap());
         })
     }
 }

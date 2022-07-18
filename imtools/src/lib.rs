@@ -1,4 +1,5 @@
 pub mod cmaps;
+pub mod image_types;
 pub mod perlin;
 
 #[cfg(target_arch = "wasm32")]
