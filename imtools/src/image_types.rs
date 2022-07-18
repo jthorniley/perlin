@@ -1,6 +1,6 @@
 use std::borrow::Borrow;
 
-use ndarray::{Array3, ArrayView2, ArrayViewMut2};
+use ndarray::prelude::*;
 use num_traits::{Num, NumAssign, NumCast};
 
 pub trait ScalarPixel: Num + NumCast + NumAssign + PartialOrd + Copy {}

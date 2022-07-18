@@ -1,7 +1,6 @@
 use std::num::Wrapping;
 
 use ndarray::prelude::*;
-use num_traits::Num;
 
 use crate::image_types::{ScalarImageViewMut, ScalarPixel};
 
@@ -15,8 +14,8 @@ use crate::image_types::{ScalarImageViewMut, ScalarPixel};
 /// This uses the 5th order [smoothstep] function.
 ///
 /// [smoothstep]: https://en.wikipedia.org/wiki/Smoothstep#5th-order_equation
-fn interpolate<T: Num + From<f32> + Copy>(a0: T, a1: T, w: T) -> T {
-    (a1 - a0) * ((w * (w * 6.0.into() - 15.0.into()) + 10.0.into()) * w * w * w) + a0
+fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
+    (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0
 }
 
 /// Calculate a hash value.

@@ -1,4 +1,4 @@
-use ndarray::{azip, Array, Array3, ArrayView2, Axis};
+use ndarray::prelude::*;
 use ndarray_stats::QuantileExt;
 
 use crate::image_types::{RgbaImage, ScalarImageView, ScalarPixel};
