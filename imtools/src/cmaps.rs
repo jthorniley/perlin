@@ -1,24 +1,25 @@
 use ndarray::{azip, Array, ArrayView2, Axis, Dim};
 use ndarray_stats::QuantileExt;
-use num_traits::{Num, NumCast};
+
+use crate::image_types::{ScalarImage, ScalarPixel};
 
 pub trait CMap {
     /// Convert to an RGBA image
-    fn cmap<'a, Pixel, Input>(&'a self, input: Input) -> Array<u8, Dim<[usize; 3]>>
+    fn cmap<'a, T, I>(&'a self, input: I) -> Array<u8, Dim<[usize; 3]>>
     where
-        Pixel: 'a + Num + NumCast + Copy + PartialOrd,
-        Input: Into<ArrayView2<'a, Pixel>>;
+        T: 'a + ScalarPixel,
+        I: ScalarImage<'a, T>;
 }
 
 pub struct Grayscale;
 
 impl CMap for Grayscale {
-    fn cmap<'a, Pixel, Input>(&'a self, input: Input) -> Array<u8, Dim<[usize; 3]>>
+    fn cmap<'a, T, I>(&'a self, input: I) -> Array<u8, Dim<[usize; 3]>>
     where
-        Pixel: 'a + Num + NumCast + Copy + PartialOrd,
-        Input: Into<ArrayView2<'a, Pixel>>,
+        T: 'a + ScalarPixel,
+        I: ScalarImage<'a, T>,
     {
-        let input_view: ArrayView2<'a, Pixel> = input.into();
+        let input_view: ArrayView2<'a, T> = input.into();
         let min_value = input_view.min().unwrap();
         let max_value = input_view.max().unwrap();
         let range = *max_value - *min_value;
