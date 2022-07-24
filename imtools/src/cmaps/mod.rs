@@ -1,7 +1,7 @@
 use crate::image_types::{RgbaImage, ScalarImageView, ScalarPixel};
 use ndarray::prelude::*;
 use ndarray_stats::QuantileExt;
-use palette::{gradient::named::VIRIDIS, Gradient, LinSrgb};
+use palette::{Gradient, LinSrgb};
 
 pub trait CMap<'a, Pixel, I>
 where
@@ -35,33 +35,6 @@ where
             o[0] = level;
             o[1] = level;
             o[2] = level;
-            o[3] = 255u8;
-        });
-        output
-    }
-}
-
-pub struct Viridis;
-
-impl<'a, Pixel, I> CMap<'a, Pixel, I> for Viridis
-where
-    Pixel: 'a + ScalarPixel,
-    I: ScalarImageView<'a, Pixel>,
-{
-    type Output = Array3<u8>;
-
-    fn cmap(&'a self, input: I) -> Self::Output {
-        let input_view: ArrayView2<'a, Pixel> = input.into();
-        let min_value = input_view.min().unwrap();
-        let max_value = input_view.max().unwrap();
-        let range = *max_value - *min_value;
-        let mut output = Array::zeros((input_view.shape()[0], input_view.shape()[1], 4));
-        azip!((mut o in output.lanes_mut(Axis(2)), &i in input_view) {
-            let scaled= ((i - *min_value) / range).to_f32().unwrap();
-            let rgb = VIRIDIS.get(scaled.into()).into_components();
-            o[0] = (rgb.0 * 255.0) as u8;
-            o[1] = (rgb.1 * 255.0) as u8;
-            o[2] = (rgb.2 * 255.0) as u8;
             o[3] = 255u8;
         });
         output
