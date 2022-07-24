@@ -1,29 +1,29 @@
 use crate::image_types::{RgbaImage, ScalarImageView, ScalarPixel};
 use ndarray::prelude::*;
 use ndarray_stats::QuantileExt;
-use palette::{Gradient, LinSrgb};
+use palette::{Gradient, LinSrgb, Pixel};
 
-pub trait CMap<'a, Pixel, I>
+pub trait CMap<'a, Pixel, Image>
 where
     Pixel: 'a + ScalarPixel,
-    I: ScalarImageView<'a, Pixel>,
+    Image: ScalarImageView<'a, Pixel>,
 {
     type Output: RgbaImage;
 
     /// Convert to an RGBA image
-    fn cmap(&'a self, input: I) -> Self::Output;
+    fn cmap(&'a self, input: Image) -> Self::Output;
 }
 
 pub struct Grayscale;
 
-impl<'a, Pixel, I> CMap<'a, Pixel, I> for Grayscale
+impl<'a, Pixel, Image> CMap<'a, Pixel, Image> for Grayscale
 where
     Pixel: 'a + ScalarPixel,
-    I: ScalarImageView<'a, Pixel>,
+    Image: ScalarImageView<'a, Pixel>,
 {
     type Output = Array3<u8>;
 
-    fn cmap(&'a self, input: I) -> Self::Output {
+    fn cmap(&'a self, input: Image) -> Self::Output {
         let input_view: ArrayView2<'a, Pixel> = input.into();
         let min_value = input_view.min().unwrap();
         let max_value = input_view.max().unwrap();
@@ -75,15 +75,12 @@ where
         let (grad_min, grad_max) = self.gradient.domain();
         let grad_range = grad_max - grad_min;
 
-        let mut output = Array::zeros((input_view.shape()[0], input_view.shape()[1], 4));
+        let mut output = Array::zeros((input_view.shape()[0], input_view.shape()[1], 3));
         azip!((mut o in output.lanes_mut(Axis(2)), &i in input_view) {
             let x = (i.to_f32().unwrap() - input_min) / input_range;
-            let x = ( x * grad_range) + grad_min;
-            let rgb = self.gradient.get(x).into_components();
-            o[0] = (rgb.0 * 255.0) as u8;
-            o[1] = (rgb.1 * 255.0) as u8;
-            o[2] = (rgb.2 * 255.0) as u8;
-            o[3] = 255u8;
+            let x = (x * grad_range) + grad_min;
+            let value: [u8; 3] = self.gradient.get(x).into_format().into_raw();
+            o.assign(&Array1::from_iter(value));
         });
         output
     }

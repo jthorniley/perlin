@@ -27,7 +27,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         result.as_slice().ok_or("Unexpected error")?,
         cols as u32,
         rows as u32,
-        image::ColorType::Rgba8,
+        image::ColorType::Rgb8,
     )?;
 
     Ok(())
