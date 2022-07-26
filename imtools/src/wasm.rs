@@ -1,7 +1,10 @@
-use js_sys::{Float32Array, Uint8Array, Uint8ClampedArray, WebAssembly::Memory};
+use js_sys::{Float32Array, WebAssembly::Memory};
 use ndarray::prelude::*;
+use palette::gradient::named::VIRIDIS;
 use wasm_bindgen::{memory, prelude::*, Clamped, JsCast};
 use web_sys::ImageData;
+
+use crate::cmaps::CMap;
 
 #[wasm_bindgen]
 pub struct ScalarImage {
@@ -78,5 +81,22 @@ impl Perlin {
     #[wasm_bindgen(js_name = "addToImage")]
     pub fn add_to_image(&self, image: &mut ScalarImage) {
         self.inner.add_to_image(&mut image.data)
+    }
+}
+
+#[wasm_bindgen]
+pub struct GradientCMap;
+
+#[wasm_bindgen]
+impl GradientCMap {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> GradientCMap {
+        GradientCMap
+    }
+
+    #[wasm_bindgen]
+    pub fn cmap(&self, image: &ScalarImage) -> RgbaImage {
+        let data = crate::cmaps::GradientCMap::new(VIRIDIS).cmap(&image.data);
+        RgbaImage { data }
     }
 }
