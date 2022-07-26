@@ -22,12 +22,12 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let result = GradientCMap::new(MAGMA).cmap(&img);
 
-    let mut image_buffer: RgbImage = ImageBuffer::new(cols as u32, rows as u32);
+    let mut image_buffer: RgbaImage = ImageBuffer::new(cols as u32, rows as u32);
 
     image_buffer
         .enumerate_pixels_mut()
         .for_each(|(x, y, pixel)| {
-            *pixel = Rgb::from(*result.get((y as usize, x as usize)).unwrap());
+            *pixel = Rgba::from(*result.get((y as usize, x as usize)).unwrap());
         });
 
     image_buffer.save("output.png")?;
