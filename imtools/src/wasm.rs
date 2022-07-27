@@ -1,6 +1,10 @@
-use js_sys::{Float32Array, WebAssembly::Memory};
-use ndarray::{Array, Dim};
-use wasm_bindgen::{memory, prelude::*, JsCast};
+use crate::prelude::*;
+
+use ndarray::prelude::*;
+use palette::gradient::named::VIRIDIS;
+
+use wasm_bindgen::{prelude::*, Clamped};
+use web_sys::ImageData;
 
 #[wasm_bindgen]
 pub struct ScalarImage {
@@ -14,37 +18,63 @@ impl ScalarImage {
         let data = Array::zeros((height, width));
         ScalarImage { data }
     }
+}
 
-    /// Get the underlying array of data for the image.
-    ///
-    /// Returns a float array of the randomly generated image.
+#[wasm_bindgen]
+pub struct RgbaImage {
+    data: Array2<[u8; 4]>,
+}
+
+#[wasm_bindgen]
+impl RgbaImage {
+    pub fn fill(width: usize, height: usize, r: u8, g: u8, b: u8) -> RgbaImage {
+        let data = Array2::from_elem((height, width), [r, g, b, 255]);
+        RgbaImage { data }
+    }
+
     #[wasm_bindgen(js_name = "imageData")]
-    pub fn image_data(&self) -> Float32Array {
-        Float32Array::new_with_byte_offset_and_length(
-            &memory().unchecked_into::<Memory>().buffer(),
-            self.data.as_ptr() as u32,
-            self.data.len() as u32,
+    pub fn image_data(&self) -> ImageData {
+        ImageData::new_with_u8_clamped_array(
+            Clamped(self.data.as_flat_slice()),
+            self.data.dim().1 as u32,
         )
+        .unwrap()
     }
 }
 
-
 #[wasm_bindgen]
 pub struct Perlin {
-    inner: crate::perlin::Perlin<f32>
+    inner: crate::perlin::Perlin<f32>,
 }
 
 #[wasm_bindgen]
 impl Perlin {
-
     #[wasm_bindgen(constructor)]
     pub fn new(scale: usize, amp: f32) -> Perlin {
-        Perlin { inner: crate::perlin::Perlin::<f32>::new(scale, amp) }
+        Perlin {
+            inner: crate::perlin::Perlin::<f32>::new(scale, amp),
+        }
     }
 
-
-    #[wasm_bindgen(js_name="addToImage")]
+    #[wasm_bindgen(js_name = "addToImage")]
     pub fn add_to_image(&self, image: &mut ScalarImage) {
         self.inner.add_to_image(&mut image.data)
+    }
+}
+
+#[wasm_bindgen]
+pub struct GradientCMap;
+
+#[wasm_bindgen]
+impl GradientCMap {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> GradientCMap {
+        GradientCMap
+    }
+
+    #[wasm_bindgen]
+    pub fn cmap(&self, image: &ScalarImage) -> RgbaImage {
+        let data = crate::cmaps::GradientCMap::new(VIRIDIS).cmap(&image.data);
+        RgbaImage { data }
     }
 }

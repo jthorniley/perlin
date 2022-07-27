@@ -1,18 +1,15 @@
 use std::error::Error;
 
 use image::*;
-use imtools::{
-    cmaps::{CMap, GradientCMap},
-    perlin::Perlin,
-};
-use ndarray::{Array, Dim};
+use imtools::prelude::*;
+use ndarray::prelude::*;
 use palette::gradient::named::MAGMA;
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let cols = 1200;
     let rows = 1000;
 
-    let mut img: Array<f32, Dim<[usize; 2]>> = Array::zeros([rows, cols]);
+    let mut img: Array2<f32> = Array::zeros([rows, cols]);
 
     Perlin::new(400, 0.9).add_to_image(&mut img);
     Perlin::new(158, 0.3).add_to_image(&mut img);
@@ -22,13 +19,8 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let result = GradientCMap::new(MAGMA).cmap(&img);
 
-    let mut image_buffer: RgbImage = ImageBuffer::new(cols as u32, rows as u32);
-
-    image_buffer
-        .enumerate_pixels_mut()
-        .for_each(|(x, y, pixel)| {
-            *pixel = Rgb::from(*result.get((y as usize, x as usize)).unwrap());
-        });
+    let image_buffer =
+        RgbaImage::from_raw(cols as u32, rows as u32, result.as_flat_slice().to_vec()).unwrap();
 
     image_buffer.save("output.png")?;
 

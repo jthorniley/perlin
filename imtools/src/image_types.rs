@@ -12,5 +12,5 @@ impl<'a, I, T: 'a + ScalarPixel> ScalarImageView<'a, T> for I where I: Into<Arra
 pub trait ScalarImageViewMut<'a, T: 'a + ScalarPixel>: Into<ArrayViewMut2<'a, T>> {}
 impl<'a, I, T: 'a + ScalarPixel> ScalarImageViewMut<'a, T> for I where I: Into<ArrayViewMut2<'a, T>> {}
 
-pub trait RgbImage: Borrow<Array2<[u8; 3]>> {}
-impl<I> RgbImage for I where I: Borrow<Array2<[u8; 3]>> {}
+pub trait RgbaImageArray: Borrow<Array2<[u8; 4]>> {}
+impl<I> RgbaImageArray for I where I: Borrow<Array2<[u8; 4]>> {}
