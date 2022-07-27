@@ -1,18 +1,22 @@
-use std::error::Error;
+use std::{error::Error, slice};
 
 use image::*;
 use imtools::{
     cmaps::{CMap, GradientCMap},
     perlin::Perlin,
 };
-use ndarray::{Array, Dim};
+use ndarray::prelude::*;
 use palette::gradient::named::MAGMA;
+
+fn flatten(input: &Array2<[u8; 4]>) -> &[u8] {
+    unsafe { slice::from_raw_parts(input.as_ptr() as *const u8, input.len() * 4) }
+}
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let cols = 1200;
     let rows = 1000;
 
-    let mut img: Array<f32, Dim<[usize; 2]>> = Array::zeros([rows, cols]);
+    let mut img: Array2<f32> = Array::zeros([rows, cols]);
 
     Perlin::new(400, 0.9).add_to_image(&mut img);
     Perlin::new(158, 0.3).add_to_image(&mut img);
@@ -22,13 +26,8 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let result = GradientCMap::new(MAGMA).cmap(&img);
 
-    let mut image_buffer: RgbaImage = ImageBuffer::new(cols as u32, rows as u32);
-
-    image_buffer
-        .enumerate_pixels_mut()
-        .for_each(|(x, y, pixel)| {
-            *pixel = Rgba::from(*result.get((y as usize, x as usize)).unwrap());
-        });
+    let image_buffer =
+        RgbaImage::from_raw(cols as u32, rows as u32, flatten(&result).to_vec()).unwrap();
 
     image_buffer.save("output.png")?;
 
