@@ -1,16 +1,9 @@
-use std::{error::Error, slice};
+use std::error::Error;
 
 use image::*;
-use imtools::{
-    cmaps::{CMap, GradientCMap},
-    perlin::Perlin,
-};
+use imtools::prelude::*;
 use ndarray::prelude::*;
 use palette::gradient::named::MAGMA;
-
-fn flatten(input: &Array2<[u8; 4]>) -> &[u8] {
-    unsafe { slice::from_raw_parts(input.as_ptr() as *const u8, input.len() * 4) }
-}
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let cols = 1200;
@@ -27,7 +20,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     let result = GradientCMap::new(MAGMA).cmap(&img);
 
     let image_buffer =
-        RgbaImage::from_raw(cols as u32, rows as u32, flatten(&result).to_vec()).unwrap();
+        RgbaImage::from_raw(cols as u32, rows as u32, result.as_flat_slice().to_vec()).unwrap();
 
     image_buffer.save("output.png")?;
 

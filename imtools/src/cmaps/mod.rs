@@ -1,4 +1,4 @@
-use crate::image_types::{RgbaImage, ScalarImageView, ScalarPixel};
+use crate::image_types::{RgbaImageArray, ScalarImageView, ScalarPixel};
 use ndarray::prelude::*;
 use ndarray_stats::QuantileExt;
 use palette::{Gradient, LinSrgb, Pixel};
@@ -8,7 +8,7 @@ where
     Pixel: 'a + ScalarPixel,
     Image: ScalarImageView<'a, Pixel>,
 {
-    type Output: RgbaImage;
+    type Output: RgbaImageArray;
 
     /// Convert to an RGB image
     fn cmap(&'a self, input: Image) -> Self::Output;
