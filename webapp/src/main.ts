@@ -1,6 +1,6 @@
-import imggen, { GradientCMap, Perlin, ScalarImage } from "imtools";
+import imtools, { GradientCMap, Perlin, ScalarImage } from "imtools";
 
-await imggen();
+await imtools();
 
 const WIDTH = 1000;
 const HEIGHT = 500;
