@@ -1,10 +1,10 @@
-use js_sys::{Float32Array, WebAssembly::Memory};
+use crate::prelude::*;
+
 use ndarray::prelude::*;
 use palette::gradient::named::VIRIDIS;
-use wasm_bindgen::{memory, prelude::*, Clamped, JsCast};
-use web_sys::ImageData;
 
-use crate::cmaps::CMap;
+use wasm_bindgen::{prelude::*, Clamped};
+use web_sys::ImageData;
 
 #[wasm_bindgen]
 pub struct ScalarImage {
@@ -17,18 +17,6 @@ impl ScalarImage {
     pub fn new(width: usize, height: usize) -> ScalarImage {
         let data = Array::zeros((height, width));
         ScalarImage { data }
-    }
-
-    /// Get the underlying array of data for the image.
-    ///
-    /// Returns a float array of the randomly generated image.
-    #[wasm_bindgen(js_name = "imageData")]
-    pub fn image_data(&self) -> Float32Array {
-        Float32Array::new_with_byte_offset_and_length(
-            &memory().unchecked_into::<Memory>().buffer(),
-            self.data.as_ptr() as u32,
-            self.data.len() as u32,
-        )
     }
 }
 
@@ -46,18 +34,8 @@ impl RgbaImage {
 
     #[wasm_bindgen(js_name = "imageData")]
     pub fn image_data(&self) -> ImageData {
-        let mut data = Array1::zeros(self.data.len() * 4);
-        self.data
-            .as_slice()
-            .unwrap()
-            .iter()
-            .enumerate()
-            .for_each(|(i, val)| {
-                data.slice_mut(s![i * 4..(i + 1) * 4])
-                    .zip_mut_with(&Array1::from_iter(val), |a, b| *a = **b);
-            });
         ImageData::new_with_u8_clamped_array(
-            Clamped(data.as_slice().unwrap()),
+            Clamped(self.data.as_flat_slice()),
             self.data.dim().1 as u32,
         )
         .unwrap()
