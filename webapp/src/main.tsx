@@ -1,46 +1,43 @@
 import "./styles.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { useParameters, Parameters } from "./Parameters";
+import imtools, { Perlin, ScalarImage, RgbaImage, GradientCMap } from "imtools";
+
+await imtools();
 
 type SliderProps = {
     minValue: number
     maxValue: number
-    defaultValue: number
+    value: number
     onChange?: (_: number) => void
 }
 
 function Slider(props: SliderProps) {
-    const { minValue, maxValue, defaultValue, onChange } = props;
-    const [position, setPosition] = React.useState(defaultValue);
+    const { minValue, maxValue, value, onChange } = props;
 
-    const percent = Math.round((position - minValue) / (maxValue - minValue) * 100)
+    const percent = Math.round((value - minValue) / (maxValue - minValue) * 100)
     const offset = {
         width: `calc(${percent}% - 0.5rem)`
     }
 
-    React.useEffect(() => {
-        if (onChange) {
-            onChange(position)
-        }
-    }, [onChange, position])
-
     const onMouseMove = React.useCallback<React.MouseEventHandler>((ev) => {
-        if (ev.buttons) {
+        if (ev.buttons && onChange) {
             const { left } = ev.currentTarget.getBoundingClientRect();
             const x = ev.clientX - left;
             const relativePosition = Math.min(1, Math.max(0, x / ev.currentTarget.clientWidth));
 
-            setPosition(minValue + relativePosition * (maxValue - minValue))
+            onChange(minValue + relativePosition * (maxValue - minValue))
         }
-    }, [setPosition, position])
+    }, [onChange, minValue, maxValue])
     const onTouchMove = React.useCallback<React.TouchEventHandler>((ev) => {
-        if (ev) {
+        if (onChange) {
             const { left } = ev.currentTarget.getBoundingClientRect();
             const x = ev.touches[0].clientX - left;
             const relativePosition = Math.min(1, Math.max(0, x / ev.currentTarget.clientWidth));
-            setPosition(minValue + relativePosition * (maxValue - minValue))
+            onChange(minValue + relativePosition * (maxValue - minValue))
         }
-    }, [setPosition, position])
+    }, [onChange, minValue, maxValue])
 
     return (
         <div className="w-full rounded-md h-2 pt-2 pb-2 bg-fuchsia-100 flex items-center touch-none"
@@ -58,22 +55,50 @@ function Slider(props: SliderProps) {
     )
 }
 
-function ImageDisplay() {
-    return <></>;
+type ImageDisplayProps = {
+    parameters: Parameters
 }
 
-function Controls() {
-    const [scale, setScale] = React.useState(10);
+function ImageDisplay(props: ImageDisplayProps) {
+    const { parameters } = props;
+
+    React.useEffect(() => {
+        console.warn("rendering")
+        const WIDTH = 2000;
+        const HEIGHT = 2000;
+        const imageGenerator = new ScalarImage(WIDTH, HEIGHT);
+
+        new Perlin(parameters.scale, 0.5).addToImage(imageGenerator);
+
+        const rgbaImage = new GradientCMap().cmap(imageGenerator)
+
+        const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+        const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+
+        ctx.putImageData(rgbaImage.imageData(), 0, 0);
+
+    }, [parameters.scale])
+
+    return <canvas id="canvas"></canvas>;
+}
+
+type ControlsProps = {
+    parameters: Parameters
+}
+function Controls(props: ControlsProps) {
+    const { parameters } = props;
 
     return (
         <div className="flex flex-col m-2">
             <div className="flex flex-col justify-between p-4 bg-zinc-800 rounded-2xl drop-shadow-xl border-4 border-fuchsia-400">
-                <div className="text-fuchsia-400 mb-2">Scale: {scale}</div>
+                <div className="text-fuchsia-400 mb-2">Scale: {parameters.scale}</div>
                 <Slider
                     minValue={5}
                     maxValue={500}
-                    defaultValue={10}
-                    onChange={val => setScale(Math.round(val))}
+                    value={parameters.scale}
+                    onChange={val => parameters.scale = Math.round(val)}
                 />
             </div>
         </div>
@@ -81,14 +106,16 @@ function Controls() {
 }
 
 function Layout() {
+    const parameters = useParameters();
     return (
         <div className="flex w-full h-full justify-between">
-            <div className="flex-grow">
-                <ImageDisplay />
+            <div className="absolute h-full w-96 bg-zinc-900 opacity-70 right-0">
             </div>
-            <div className="w-5 bg-gradient-to-r from-transparent to-fuchsia-900 opacity-10"></div>
-            <div className="h-full w-96 bg-fuchsia-900 bg-opacity-10 shadow-lg">
-                <Controls />
+            <div className="absolute h-full w-96 right-0">
+                <Controls parameters={parameters} />
+            </div>
+            <div className="flex-grow">
+                <ImageDisplay parameters={parameters} />
             </div>
         </div>
     )
@@ -96,7 +123,7 @@ function Layout() {
 
 function App() {
     return (
-        <div className="flex w-full h-full overflow-auto absolute">
+        <div className="flex w-full h-full overflow-hidden absolute">
             <Layout />
         </div >
     )
