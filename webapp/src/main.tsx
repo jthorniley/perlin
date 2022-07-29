@@ -21,23 +21,24 @@ function Slider(props: SliderProps) {
         width: `calc(${percent}% - 0.5rem)`
     }
 
-    const onMouseMove = React.useCallback<React.MouseEventHandler>((ev) => {
-        if (ev.buttons && onChange) {
-            const { left } = ev.currentTarget.getBoundingClientRect();
-            const x = ev.clientX - left;
-            const relativePosition = Math.min(1, Math.max(0, x / ev.currentTarget.clientWidth));
+    const onMove = React.useCallback((clientX: number, rect: DOMRect) => {
+        if (onChange) {
+            const { left, width } = rect;
+            const relativePosition = Math.min(1, Math.max(0, (clientX - left) / width));
 
             onChange(minValue + relativePosition * (maxValue - minValue))
         }
     }, [onChange, minValue, maxValue])
+    const onMouseMove = React.useCallback<React.MouseEventHandler>((ev) => {
+        if (ev.buttons && onChange) {
+            onMove(ev.clientX, ev.currentTarget.getBoundingClientRect())
+        }
+    }, [onMove])
     const onTouchMove = React.useCallback<React.TouchEventHandler>((ev) => {
         if (onChange) {
-            const { left } = ev.currentTarget.getBoundingClientRect();
-            const x = ev.touches[0].clientX - left;
-            const relativePosition = Math.min(1, Math.max(0, x / ev.currentTarget.clientWidth));
-            onChange(minValue + relativePosition * (maxValue - minValue))
+            onMove(ev.touches[0].clientX, ev.currentTarget.getBoundingClientRect())
         }
-    }, [onChange, minValue, maxValue])
+    }, [onMove])
 
     return (
         <div className="w-full rounded-md h-2 pt-2 pb-2 bg-fuchsia-100 flex items-center touch-none"
