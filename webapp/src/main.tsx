@@ -3,6 +3,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { Reducer, State, useController } from "./Controller";
 import imtools, { Perlin, ScalarImage, GradientCMap } from "imtools";
+import { Slider2D } from "./Components/Slider2D";
 
 await imtools();
 
@@ -159,5 +160,10 @@ function App() {
     )
 }
 
-const root = createRoot(document.getElementById("app")!);
-root.render(<App />)
+if (window.location.search == "?slidertest") {
+    const root = createRoot(document.getElementById("app")!);
+    root.render(<Slider2D />)
+} else {
+    const root = createRoot(document.getElementById("app")!);
+    root.render(<App />)
+}
