@@ -5,5 +5,8 @@ module.exports = defineConfig({
         fs: {
             allow: [".."]
         }
+    },
+    build: {
+        target: 'es2022'
     }
 })
