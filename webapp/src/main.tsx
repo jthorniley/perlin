@@ -2,7 +2,7 @@ import "./styles.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { useParameters, Parameters } from "./Parameters";
-import imtools, { Perlin, ScalarImage, RgbaImage, GradientCMap } from "imtools";
+import imtools, { Perlin, ScalarImage, GradientCMap } from "imtools";
 
 await imtools();
 
