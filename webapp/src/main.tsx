@@ -61,27 +61,44 @@ type ImageDisplayProps = {
 
 function ImageDisplay(props: ImageDisplayProps) {
     const { parameters } = props;
+    const [shape, setShape] = React.useState<[number, number]>([100, 100]);
+    React.useEffect(() => {
+        const el = document.getElementById("canvasContainer")!;
+        const { width, height } = el.getBoundingClientRect();
+        setShape([Math.ceil(width), Math.ceil(height)]);
+
+        const { signal, abort } = new AbortController();
+        window.addEventListener("resize", () => {
+            const { width, height } = el.getBoundingClientRect();
+            setShape([Math.ceil(width), Math.ceil(height)]);
+        }, { signal })
+
+        return () => {
+            abort();
+        }
+    }, [setShape]);
 
     React.useEffect(() => {
-        console.warn("rendering")
-        const WIDTH = 2000;
-        const HEIGHT = 2000;
-        const imageGenerator = new ScalarImage(WIDTH, HEIGHT);
+        const imageGenerator = new ScalarImage(...shape);
 
         new Perlin(parameters.scale, 0.5).addToImage(imageGenerator);
 
         const rgbaImage = new GradientCMap().cmap(imageGenerator)
 
         const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-        canvas.width = WIDTH;
-        canvas.height = HEIGHT;
+        canvas.width = shape[0];
+        canvas.height = shape[1];
         const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
         ctx.putImageData(rgbaImage.imageData(), 0, 0);
 
-    }, [parameters.scale])
+    }, [parameters.scale, shape])
 
-    return <canvas id="canvas"></canvas>;
+    return (
+        <div id="canvasContainer" className="v-full h-full">
+            <canvas id="canvas"></canvas>
+        </div>
+    )
 }
 
 type ControlsProps = {
@@ -92,8 +109,8 @@ function Controls(props: ControlsProps) {
 
     return (
         <div className="flex flex-col m-2">
-            <div className="flex flex-col justify-between p-4 bg-zinc-800 rounded-2xl drop-shadow-xl border-4 border-fuchsia-400">
-                <div className="text-fuchsia-400 mb-2">Scale: {parameters.scale}</div>
+            <div className="flex justify-between items-center p-4 bg-zinc-800 rounded-2xl drop-shadow-xl border-4 border-fuchsia-400">
+                <div className="text-fuchsia-400 mr-2">Scale: </div>
                 <Slider
                     minValue={5}
                     maxValue={500}
@@ -114,7 +131,7 @@ function Layout() {
             <div className="absolute h-full w-96 right-0">
                 <Controls parameters={parameters} />
             </div>
-            <div className="flex-grow">
+            <div className="flex-grow overflow-hidden">
                 <ImageDisplay parameters={parameters} />
             </div>
         </div>
