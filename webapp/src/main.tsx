@@ -1,7 +1,7 @@
 import "./styles.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { useParameters, Parameters } from "./Parameters";
+import { Reducer, State, useController } from "./Controller";
 import imtools, { Perlin, ScalarImage, GradientCMap } from "imtools";
 
 await imtools();
@@ -56,11 +56,11 @@ function Slider(props: SliderProps) {
 }
 
 type ImageDisplayProps = {
-    parameters: Parameters
+    state: State,
 }
 
 function ImageDisplay(props: ImageDisplayProps) {
-    const { parameters } = props;
+    const { state } = props;
     const [shape, setShape] = React.useState<[number, number]>([100, 100]);
     React.useEffect(() => {
         const el = document.getElementById("canvasContainer")!;
@@ -84,7 +84,10 @@ function ImageDisplay(props: ImageDisplayProps) {
         const height = width / ratio;
         const imageGenerator = new ScalarImage(width, height);
 
-        new Perlin(parameters.scale, 0.5).addToImage(imageGenerator);
+        for (const layerId in state.layers) {
+            const layer = state.layers[layerId];
+            new Perlin(layer.scale, Math.pow(0.4, parseInt(layerId) * 2)).addToImage(imageGenerator);
+        }
 
         const rgbaImage = new GradientCMap().cmap(imageGenerator)
 
@@ -95,7 +98,7 @@ function ImageDisplay(props: ImageDisplayProps) {
 
         ctx.putImageData(rgbaImage.imageData(), 0, 0);
 
-    }, [parameters.scale, shape])
+    }, [state, shape])
 
     return (
         <div id="canvasContainer" className="w-full h-full">
@@ -105,10 +108,14 @@ function ImageDisplay(props: ImageDisplayProps) {
 }
 
 type ControlsProps = {
-    parameters: Parameters
+    state: State,
+    reducer: Reducer
+    layerId: number,
 }
 function Controls(props: ControlsProps) {
-    const { parameters } = props;
+    const { state, layerId, reducer } = props;
+
+    const { scale } = state.layers[layerId];
 
     return (
         <div className="flex flex-col m-2">
@@ -117,8 +124,8 @@ function Controls(props: ControlsProps) {
                 <Slider
                     minValue={5}
                     maxValue={300}
-                    value={parameters.scale}
-                    onChange={val => parameters.scale = Math.round(val)}
+                    value={scale}
+                    onChange={val => reducer({ setScale: { layerId: layerId, scale: val } })}
                 />
             </div>
         </div>
@@ -126,16 +133,18 @@ function Controls(props: ControlsProps) {
 }
 
 function Layout() {
-    const parameters = useParameters();
+    const { state, reducer } = useController();
     return (
         <div className="flex w-full h-full justify-between">
             <div className="absolute h-full w-96 bg-zinc-900 opacity-70 right-0">
             </div>
             <div className="absolute h-full w-96 right-0">
-                <Controls parameters={parameters} />
+                <Controls state={state} reducer={reducer} layerId={0} />
+                <Controls state={state} reducer={reducer} layerId={1} />
+                <Controls state={state} reducer={reducer} layerId={2} />
             </div>
             <div className="flex-grow overflow-hidden">
-                <ImageDisplay parameters={parameters} />
+                <ImageDisplay state={state} />
             </div>
         </div>
     )
