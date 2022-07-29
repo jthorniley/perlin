@@ -79,15 +79,18 @@ function ImageDisplay(props: ImageDisplayProps) {
     }, [setShape]);
 
     React.useEffect(() => {
-        const imageGenerator = new ScalarImage(...shape);
+        const ratio = shape[0] / shape[1];
+        const width = 500;
+        const height = width / ratio;
+        const imageGenerator = new ScalarImage(width, height);
 
         new Perlin(parameters.scale, 0.5).addToImage(imageGenerator);
 
         const rgbaImage = new GradientCMap().cmap(imageGenerator)
 
         const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-        canvas.width = shape[0];
-        canvas.height = shape[1];
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
         ctx.putImageData(rgbaImage.imageData(), 0, 0);
@@ -95,8 +98,8 @@ function ImageDisplay(props: ImageDisplayProps) {
     }, [parameters.scale, shape])
 
     return (
-        <div id="canvasContainer" className="v-full h-full">
-            <canvas id="canvas"></canvas>
+        <div id="canvasContainer" className="w-full h-full">
+            <canvas id="canvas" className="h-full"></canvas>
         </div>
     )
 }
@@ -113,7 +116,7 @@ function Controls(props: ControlsProps) {
                 <div className="text-fuchsia-400 mr-2">Scale: </div>
                 <Slider
                     minValue={5}
-                    maxValue={500}
+                    maxValue={300}
                     value={parameters.scale}
                     onChange={val => parameters.scale = Math.round(val)}
                 />
