@@ -80,10 +80,11 @@ export type Slider2DProps = {
     setValue: (value: [number, number]) => void
     dataLimits?: Limits
     screenLimits?: Limits
+    xGridLines?: number[]
 }
 
 export function Slider2D(props: Slider2DProps) {
-    const { value, setValue, dataLimits, screenLimits } = props;
+    const { value, setValue, dataLimits, screenLimits, xGridLines } = props;
 
     const transform = React.useMemo(() => {
         return new Transform(
@@ -114,6 +115,14 @@ export function Slider2D(props: Slider2DProps) {
                 x={transform.screenLimits.xMin} y={transform.screenLimits.yMax}
                 width={transform.xScreenRange} height={-transform.yScreenRange}
             />
+            {
+                xGridLines && xGridLines.map((x) => <line
+                    key={`line-${x}`}
+                    x1={transform.toScreenX(x)} x2={transform.toScreenX(x)}
+                    y1={transform.screenLimits.yMin} y2={transform.screenLimits.yMax}
+                    style={{ stroke: HIGHTLIGHT, strokeWidth: 0.5 }}
+                />)
+            }
 
             <circle cx={screenPosition[0]} cy={screenPosition[1]} r="5" stroke="white" fill="transparent" />
             <circle cx={screenPosition[0]} cy={screenPosition[1]} r="1" fill="white" />
