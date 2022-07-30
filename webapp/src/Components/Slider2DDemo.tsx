@@ -1,5 +1,5 @@
 import React from "react";
-import { Slider2D, Slider2DX } from "./Slider2D";
+import { Slider2D } from "./Slider2D";
 
 const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59,
     61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139,
@@ -40,11 +40,4 @@ export function Slider2DDemo() {
                 {...{ value }} />
         </div>
     )
-    /*    return (
-            <div className="flex flex-col">
-                <Slider2DX scale={scale} setScale={setScale} amp={amp} setAmp={setAmp} />
-                <div className="text-fuchsia-100">Scale: {scale}</div>
-                <div className="text-fuchsia-100">Amp: {amp.toFixed(3)}</div>
-            </div>
-        )*/
 }
