@@ -7,9 +7,7 @@ export function Layout() {
     const { state, reducer } = useController();
     return (
         <div className="flex w-full h-full justify-between">
-            <div className="absolute h-full w-96 bg-zinc-900 opacity-70 right-0">
-            </div>
-            <div className="absolute h-full w-96 right-0">
+            <div className="absolute h-full w-auto bg-zinc-900 bg-opacity-50 right-0">
                 <Controls state={state} reducer={reducer} layerId={0} />
                 <Controls state={state} reducer={reducer} layerId={1} />
                 <Controls state={state} reducer={reducer} layerId={2} />
