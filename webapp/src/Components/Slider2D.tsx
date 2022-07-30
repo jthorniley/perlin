@@ -9,21 +9,23 @@ const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59,
 export type Slider2DProps = {
     scale: number,
     setScale: (_: number) => void
+    amp: number,
+    setAmp: (_: number) => void
+    shape?: [number, number]
+    chartOffset?: [number, number]
 }
 
 export function Slider2D(props: Slider2DProps) {
-    const width = 200;
-    const height = 200;
-    const chartOffsetX = 10;
-    const chartOffsetY = 10;
-
-
-    const { scale, setScale } = props;
+    const { scale, setScale, amp, setAmp, shape, chartOffset } = props;
+    const [width, height] = shape ?? [200, 200];
+    const [chartOffsetX, chartOffsetY] = chartOffset ?? [10, 10];
 
     const positionX = React.useMemo(() => {
         return chartOffsetX + scale / 2 - 1
     }, [scale])
-    const [positionY, setPositionY] = React.useState(0);
+    const positionY = React.useMemo(() => {
+        return height - (chartOffsetY + amp * (height - chartOffsetY * 2))
+    }, [amp])
 
     const chartBackground = "#86198f";
     const primeHighlight = "#fae8ff";
@@ -51,12 +53,21 @@ export function Slider2D(props: Slider2DProps) {
         setScale(val);
     }, [svgRef, setScale])
 
+    const setY = React.useCallback((clientY: number) => {
+        if (!svgRef.current) {
+            return;
+        }
+        const { bottom } = svgRef.current.getBoundingClientRect();
+        const y = bottom - clientY;
+        setAmp(Math.min(1, Math.max(0, (y - chartOffsetY) / (height - 2 * chartOffsetY))))
+    }, [svgRef, setAmp])
+
     const onMouseMove = React.useCallback<React.MouseEventHandler>((ev) => {
         if (ev.buttons) {
             setX(ev.clientX)
-            setPositionY(ev.clientY)
+            setY(ev.clientY)
         }
-    }, [setX, setPositionY])
+    }, [setX, setY])
 
     return (
         <div className="flex bg-zinc-900 overflow-hidden justify-start" style={{ width, height }}>
