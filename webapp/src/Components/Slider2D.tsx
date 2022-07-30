@@ -1,4 +1,4 @@
-import React, { MouseEventHandler } from "react"
+import React, { MouseEventHandler, TouchEventHandler } from "react"
 
 const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59,
     61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139,
@@ -98,6 +98,9 @@ export function Slider2D(props: Slider2DProps) {
     }, [transform, value]);
 
     const onMouse = React.useCallback<MouseEventHandler>((ev) => {
+        if (!ev.buttons) {
+            return;
+        }
         const { left, top } = ev.currentTarget.getBoundingClientRect();
 
         setValue(transform.toData([
@@ -106,9 +109,21 @@ export function Slider2D(props: Slider2DProps) {
         ]))
     }, [transform, setValue])
 
+    const onTouch = React.useCallback<TouchEventHandler>((ev) => {
+        const { left, top } = ev.currentTarget.getBoundingClientRect();
+
+        setValue(transform.toData([
+            ev.touches[0].clientX - left,
+            ev.touches[0].clientY - top
+        ]))
+    }, [transform, setValue])
+
     return (<div className="h-full w-full">
-        <svg style={{ width: "100%", height: "100%" }}
+        <svg style={{ width: "100%", height: "100%", touchAction: "none" }}
+            onMouseDown={onMouse}
             onMouseMove={onMouse}
+            onTouchStart={onTouch}
+            onTouchMove={onTouch}
         >
             <rect
                 fill={CHART_BACKGROUND}
@@ -124,8 +139,8 @@ export function Slider2D(props: Slider2DProps) {
                 />)
             }
 
-            <circle cx={screenPosition[0]} cy={screenPosition[1]} r="5" stroke="white" fill="transparent" />
-            <circle cx={screenPosition[0]} cy={screenPosition[1]} r="1" fill="white" />
+            <circle cx={screenPosition[0]} cy={screenPosition[1]} r="8" stroke="white" strokeWidth={2} fill="transparent" />
+            <circle cx={screenPosition[0]} cy={screenPosition[1]} r="2" fill="white" />
         </svg>
     </div>)
 }
