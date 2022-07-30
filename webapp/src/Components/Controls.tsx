@@ -34,10 +34,12 @@ export function Controls(props: ControlsProps) {
     const { state, layerId, reducer } = props;
 
     const snapValue = React.useCallback((value: [number, number]) => {
-        const [x,] = value;
-        const scale = closestPrime(x);
-        reducer({ setScale: { layerId, scale } })
+        const [rawScale, amp] = value;
+        const scale = closestPrime(rawScale);
+        reducer({ setLayer: { layerId, scale, amp } })
     }, [reducer, layerId])
+
+    const { scale, amp } = state.layers[layerId];
 
     return (
         <div className="flex flex-col m-4">
@@ -48,7 +50,7 @@ export function Controls(props: ControlsProps) {
                         screenLimits={{ xMin: 10, xMax: 190, yMin: 90, yMax: 10 }}
                         xGridLines={PRIMES}
                         setValue={snapValue}
-                        value={[state.layers[layerId].scale, 0.5]} />
+                        value={[scale, amp]} />
                 </div>
             </div>
         </div>

@@ -36,7 +36,7 @@ export function ImageDisplay(props: ImageDisplayProps) {
 
         for (const layerId in state.layers) {
             const layer = state.layers[layerId];
-            new Perlin(layer.scale, Math.pow(0.4, parseInt(layerId) * 2)).addToImage(imageGenerator);
+            new Perlin(layer.scale, layer.amp).addToImage(imageGenerator);
         }
 
         const rgbaImage = new GradientCMap().cmap(imageGenerator)
