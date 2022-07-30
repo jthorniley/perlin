@@ -6,15 +6,24 @@ const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59,
     233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317,
     331, 337, 347, 349, 353, 359]
 
-export function Slider2D() {
+export type Slider2DProps = {
+    scale: number,
+    setScale: (_: number) => void
+}
+
+export function Slider2D(props: Slider2DProps) {
     const width = 200;
     const height = 200;
-
-    const [positionX, setPositionX] = React.useState(0);
-    const [positionY, setPositionY] = React.useState(0);
-
     const chartOffsetX = 10;
     const chartOffsetY = 10;
+
+
+    const { scale, setScale } = props;
+
+    const positionX = React.useMemo(() => {
+        return chartOffsetX + scale / 2 - 1
+    }, [scale])
+    const [positionY, setPositionY] = React.useState(0);
 
     const chartBackground = "#86198f";
     const primeHighlight = "#fae8ff";
@@ -28,19 +37,19 @@ export function Slider2D() {
         const x = clientX - left;
 
         let dist = 100000;
-        let newX = 0;
+        let val = 0;
         for (const prime of PRIMES) {
             const primeLoc = chartOffsetX + prime / 2 - 1;
             const nextDist = Math.abs(primeLoc - x);
             if (nextDist < dist) {
                 dist = nextDist
-                newX = primeLoc
+                val = prime
             } else {
                 break;
             }
         }
-        setPositionX(newX)
-    }, [svgRef, setPositionX])
+        setScale(val);
+    }, [svgRef, setScale])
 
     const onMouseMove = React.useCallback<React.MouseEventHandler>((ev) => {
         if (ev.buttons) {
@@ -64,6 +73,7 @@ export function Slider2D() {
                 />
                 {
                     PRIMES.map(prime => <line
+                        key={`line-${prime}`}
                         x1={chartOffsetX + prime / 2 - 1} x2={chartOffsetX + prime / 2 - 1}
                         y1={chartOffsetY} y2={height - chartOffsetY}
                         style={{ stroke: primeHighlight, strokeWidth: 0.5 }}
