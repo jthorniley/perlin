@@ -17,11 +17,11 @@ class Transform {
     private _xScreenRange: number
     private _yScreenRange: number
 
-    constructor(private dataLimits: Limits, private screenLimits: Limits) {
-        this._xDataRange = dataLimits.xMax - dataLimits.xMin
-        this._yDataRange = dataLimits.yMax - dataLimits.yMin
-        this._xScreenRange = screenLimits.xMax - screenLimits.xMin
-        this._yScreenRange = screenLimits.yMax - screenLimits.yMin
+    constructor(private _dataLimits: Limits, private _screenLimits: Limits) {
+        this._xDataRange = _dataLimits.xMax - _dataLimits.xMin
+        this._yDataRange = _dataLimits.yMax - _dataLimits.yMin
+        this._xScreenRange = _screenLimits.xMax - _screenLimits.xMin
+        this._yScreenRange = _screenLimits.yMax - _screenLimits.yMin
     }
 
     get xScreenRange(): number {
@@ -32,24 +32,46 @@ class Transform {
         return this._yScreenRange
     }
 
+    get screenLimits(): Limits {
+        return this._screenLimits
+    }
+
+    get dataLimits(): Limits {
+        return this._dataLimits
+    }
+
     toDataX(value: number): number {
-        const x = this.dataLimits.xMin + this._xDataRange * (value - this.screenLimits.xMin) / this._xScreenRange
-        return Math.min(this.dataLimits.xMax, Math.max(this.dataLimits.xMin, x))
+        const x = this._dataLimits.xMin + this._xDataRange * (value - this._screenLimits.xMin) / this._xScreenRange
+        return Math.min(this._dataLimits.xMax, Math.max(this._dataLimits.xMin, x))
     }
 
     toDataY(value: number): number {
-        const y = this.dataLimits.yMin + this._yDataRange * (value - this.screenLimits.yMin) / this._yScreenRange
-        return Math.min(this.dataLimits.yMax, Math.max(this.dataLimits.yMin, y))
+        const y = this._dataLimits.yMin + this._yDataRange * (value - this._screenLimits.yMin) / this._yScreenRange
+        return Math.min(this._dataLimits.yMax, Math.max(this._dataLimits.yMin, y))
+    }
+
+    toData([x, y]: [number, number]): [number, number] {
+        return [
+            this.toDataX(x),
+            this.toDataY(y)
+        ]
     }
 
     toScreenX(value: number): number {
-        const x = this.screenLimits.xMin + this._xScreenRange * (value - this.dataLimits.xMin) / this._xDataRange
-        return Math.min(this.screenLimits.xMax, Math.max(this.screenLimits.xMin, x))
+        const x = this._screenLimits.xMin + this._xScreenRange * (value - this._dataLimits.xMin) / this._xDataRange
+        return Math.min(this._screenLimits.xMax, Math.max(this._screenLimits.xMin, x))
     }
 
     toScreenY(value: number): number {
-        const y = this.screenLimits.yMin + this._yScreenRange * (value - this.dataLimits.yMin) / this._yDataRange
-        return Math.max(this.screenLimits.yMax, Math.min(this.screenLimits.yMin, y))
+        const y = this._screenLimits.yMin + this._yScreenRange * (value - this._dataLimits.yMin) / this._yDataRange
+        return Math.max(this._screenLimits.yMax, Math.min(this._screenLimits.yMin, y))
+    }
+
+    toScreen([x, y]: [number, number]): [number, number] {
+        return [
+            this.toScreenX(x),
+            this.toScreenY(y)
+        ]
     }
 }
 
@@ -65,24 +87,22 @@ export function Slider2D(props: Slider2DProps) {
 
     const transform = React.useMemo(() => {
         return new Transform(
-            dataLimits ?? { xMin: 2, xMax: 200, yMin: 0, yMax: 1 },
+            dataLimits ?? { xMin: 0, xMax: 1, yMin: 0, yMax: 1 },
             screenLimits ?? { xMin: 10, xMax: 190, yMin: 190, yMax: 10 }
         )
     }, [dataLimits, screenLimits])
 
-    const screenPosition = [transform.toScreenX(value[0]), transform.toScreenY(value[1])];
+    const screenPosition = React.useMemo(() => {
+        return transform.toScreen(value)
+    }, [transform, value]);
 
     const onMouse = React.useCallback<MouseEventHandler>((ev) => {
         const { left, top } = ev.currentTarget.getBoundingClientRect();
-        const [screenX, screenY] = [
+
+        setValue(transform.toData([
             ev.clientX - left,
             ev.clientY - top
-        ]
-
-        setValue([
-            transform.toDataX(screenX),
-            transform.toDataY(screenY)
-        ])
+        ]))
     }, [transform, setValue])
 
     return (<div className="h-full w-full">
@@ -91,7 +111,7 @@ export function Slider2D(props: Slider2DProps) {
         >
             <rect
                 fill={CHART_BACKGROUND}
-                x={transform.toScreenX(0)} y={transform.toScreenY(1)}
+                x={transform.screenLimits.xMin} y={transform.screenLimits.yMax}
                 width={transform.xScreenRange} height={-transform.yScreenRange}
             />
 
