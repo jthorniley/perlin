@@ -27,9 +27,12 @@ export function useController(): { state: State, reducer: Reducer } {
         return { ...state }
     }, {
         layers: [
-            { scale: 100, amp: 1 },
-            { scale: 50, amp: 0.5 },
-            { scale: 10, amp: 0.1 }
+            { scale: 349, amp: 0.8 },
+            { scale: 251, amp: 0.8 },
+            { scale: 163, amp: 0.5 },
+            { scale: 83, amp: 0.5 },
+            { scale: 13, amp: 0.1 },
+            { scale: 7, amp: 0.1 }
         ]
     })
     return { state, reducer }

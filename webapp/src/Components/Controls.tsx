@@ -42,16 +42,14 @@ export function Controls(props: ControlsProps) {
     const { scale, amp } = state.layers[layerId];
 
     return (
-        <div className="flex flex-col m-4">
-            <div className="flex justify-between items-center bg-zinc-800 rounded-2xl drop-shadow-xl border-4 border-fuchsia-400">
-                <div style={{ width: 200, height: 100 }}>
-                    <Slider2D
-                        dataLimits={{ xMin: 1, xMax: 360, yMin: 0, yMax: 10 }}
-                        screenLimits={{ xMin: 10, xMax: 190, yMin: 90, yMax: 10 }}
-                        xGridLines={PRIMES}
-                        setValue={snapValue}
-                        value={[scale, amp]} />
-                </div>
+        <div className="m-3 bg-zinc-800 rounded-2xl drop-shadow-xl border-4 border-fuchsia-400">
+            <div style={{ width: 250, height: 60 }}>
+                <Slider2D
+                    dataLimits={{ xMin: 1, xMax: 360, yMin: 0, yMax: 1 }}
+                    screenLimits={{ xMin: 10, xMax: 240, yMin: 55, yMax: 5 }}
+                    xGridLines={PRIMES}
+                    setValue={snapValue}
+                    value={[scale, amp]} />
             </div>
         </div>
     )
