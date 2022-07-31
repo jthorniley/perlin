@@ -17,7 +17,8 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     Perlin::new(59, 0.1).add_to_image(&mut img);
     Perlin::new(3, 0.1).add_to_image(&mut img);
 
-    let result = GradientCMap::new(MAGMA).cmap(&img);
+    let mut result: Array2<[u8; 4]> = Array2::from_elem([rows, cols], [0, 0, 0, 0]);
+    GradientCMap::new(MAGMA).cmap(&img, &mut result);
 
     let image_buffer =
         RgbaImage::from_raw(cols as u32, rows as u32, result.as_flat_slice().to_vec()).unwrap();

@@ -62,7 +62,7 @@ export function ImageDisplay(props: ImageDisplayProps) {
             const ctx = canvasEl.current.getContext("2d") as CanvasRenderingContext2D;
             ctx.putImageData(rgbaImage.imageData(), 0, 0);
         }
-    }, [rgbaImage, canvasEl])
+    }, [state, rgbaImage, canvasEl])
 
     return (
         <div ref={canvasContainerEl} className="w-full h-full">
