@@ -1,7 +1,7 @@
 import React from "react";
 import { State } from "../Controller";
 
-import imtools, { Perlin, ScalarImage, GradientCMap } from "imtools";
+import imtools, { Perlin, ScalarImage, GradientCMap, RgbaImage } from "imtools";
 
 await imtools()
 
@@ -11,9 +11,17 @@ export type ImageDisplayProps = {
 
 export function ImageDisplay(props: ImageDisplayProps) {
     const { state } = props;
+
+    const canvasContainerEl = React.useRef<HTMLDivElement>(null);
+    const canvasEl = React.useRef<HTMLCanvasElement>(null);
+
     const [shape, setShape] = React.useState<[number, number]>([100, 100]);
+
     React.useEffect(() => {
-        const el = document.getElementById("canvasContainer")!;
+        if (!canvasContainerEl.current) {
+            return;
+        }
+        const el = canvasContainerEl.current;
         const { width, height } = el.getBoundingClientRect();
         setShape([Math.ceil(width), Math.ceil(height)]);
 
@@ -26,33 +34,39 @@ export function ImageDisplay(props: ImageDisplayProps) {
         return () => {
             abort();
         }
-    }, [setShape]);
+    }, [setShape, canvasContainerEl]);
 
-    React.useEffect(() => {
+    const [scalarImage, rgbaImage] = React.useMemo(() => {
         const ratio = shape[0] / shape[1];
         const width = 500;
         const height = width / ratio;
-        const imageGenerator = new ScalarImage(width, height);
-
-        for (const layerId in state.layers) {
-            const layer = state.layers[layerId];
-            new Perlin(layer.scale, layer.amp).addToImage(imageGenerator);
+        if (canvasEl.current) {
+            canvasEl.current.width = width;
+            canvasEl.current.height = height;
         }
 
-        const rgbaImage = new GradientCMap().cmap(imageGenerator)
+        return [new ScalarImage(width, height), new RgbaImage(width, height)]
+    }, [shape, canvasEl])
 
-        const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+    React.useEffect(() => {
+        scalarImage.clear();
+        for (const layerId in state.layers) {
+            const layer = state.layers[layerId];
+            new Perlin(layer.scale, layer.amp).addToImage(scalarImage);
+        }
+        new GradientCMap().cmap(scalarImage, rgbaImage)
+    }, [scalarImage, state])
 
-        ctx.putImageData(rgbaImage.imageData(), 0, 0);
-
-    }, [state, shape])
+    React.useEffect(() => {
+        if (canvasEl.current) {
+            const ctx = canvasEl.current.getContext("2d") as CanvasRenderingContext2D;
+            ctx.putImageData(rgbaImage.imageData(), 0, 0);
+        }
+    }, [rgbaImage, canvasEl])
 
     return (
-        <div id="canvasContainer" className="w-full h-full">
-            <canvas id="canvas" className="h-full"></canvas>
+        <div ref={canvasContainerEl} className="w-full h-full">
+            <canvas ref={canvasEl} className="h-full"></canvas>
         </div>
     )
 }

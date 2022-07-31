@@ -18,6 +18,11 @@ impl ScalarImage {
         let data = Array::zeros((height, width));
         ScalarImage { data }
     }
+
+    #[wasm_bindgen]
+    pub fn clear(&mut self) {
+        self.data.fill(0.0)
+    }
 }
 
 #[wasm_bindgen]
@@ -27,6 +32,12 @@ pub struct RgbaImage {
 
 #[wasm_bindgen]
 impl RgbaImage {
+    #[wasm_bindgen(constructor)]
+    pub fn new(width: usize, height: usize) -> RgbaImage {
+        let data = Array2::from_elem((height, width), [0u8, 0, 0, 0]);
+        RgbaImage { data }
+    }
+
     pub fn fill(width: usize, height: usize, r: u8, g: u8, b: u8) -> RgbaImage {
         let data = Array2::from_elem((height, width), [r, g, b, 255]);
         RgbaImage { data }
@@ -39,6 +50,16 @@ impl RgbaImage {
             self.data.dim().1 as u32,
         )
         .unwrap()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn width(&self) -> usize {
+        self.data.shape()[1]
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn height(&self) -> usize {
+        self.data.shape()[0]
     }
 }
 
@@ -73,8 +94,7 @@ impl GradientCMap {
     }
 
     #[wasm_bindgen]
-    pub fn cmap(&self, image: &ScalarImage) -> RgbaImage {
-        let data = crate::cmaps::GradientCMap::new(VIRIDIS).cmap(&image.data);
-        RgbaImage { data }
+    pub fn cmap(&self, image: &ScalarImage, output: &mut RgbaImage) {
+        crate::cmaps::GradientCMap::new(VIRIDIS).cmap(&image.data, &mut output.data);
     }
 }
