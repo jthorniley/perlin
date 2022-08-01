@@ -5,48 +5,46 @@ import imtools, { Perlin, ScalarImage, GradientCMap, RgbaImage } from "imtools";
 
 await imtools()
 
-export type ImageDisplayProps = {
-    state: State,
-}
-
-export function ImageDisplay(props: ImageDisplayProps) {
-    const { state } = props;
-
-    const canvasContainerEl = React.useRef<HTMLDivElement>(null);
-    const canvasEl = React.useRef<HTMLCanvasElement>(null);
-
+function useSetCanvasSizeToContainer(container: React.RefObject<HTMLElement>, canvas: React.RefObject<HTMLCanvasElement>) {
     const [shape, setShape] = React.useState<[number, number]>([100, 100]);
 
+    const setContainerShape = React.useCallback((containerShape: [number, number]) => {
+        const ratio = containerShape[0] / containerShape[1];
+        const width = Math.min(800, containerShape[0]);
+        const height = width / ratio;
+        if (canvas.current) {
+            canvas.current.width = width;
+            canvas.current.height = height;
+        }
+        setShape([width, height])
+    }, [canvas])
+
     React.useEffect(() => {
-        if (!canvasContainerEl.current) {
+        if (!container.current) {
             return;
         }
-        const el = canvasContainerEl.current;
+        const el = container.current;
         const { width, height } = el.getBoundingClientRect();
-        setShape([Math.ceil(width), Math.ceil(height)]);
+        setContainerShape([Math.ceil(width), Math.ceil(height)]);
 
         const { signal, abort } = new AbortController();
         window.addEventListener("resize", () => {
             const { width, height } = el.getBoundingClientRect();
-            setShape([Math.ceil(width), Math.ceil(height)]);
+            setContainerShape([Math.ceil(width), Math.ceil(height)]);
         }, { signal })
 
         return () => {
             abort();
         }
-    }, [setShape, canvasContainerEl]);
+    }, [setContainerShape, container]);
 
+    return shape;
+}
+
+function usePerlinNoise(width: number, height: number, state: State) {
     const [scalarImage, rgbaImage] = React.useMemo(() => {
-        const ratio = shape[0] / shape[1];
-        const width = 500;
-        const height = width / ratio;
-        if (canvasEl.current) {
-            canvasEl.current.width = width;
-            canvasEl.current.height = height;
-        }
-
         return [new ScalarImage(width, height), new RgbaImage(width, height)]
-    }, [shape, canvasEl])
+    }, [width, height])
 
     React.useEffect(() => {
         scalarImage.clear();
@@ -57,16 +55,37 @@ export function ImageDisplay(props: ImageDisplayProps) {
         new GradientCMap().cmap(scalarImage, rgbaImage)
     }, [scalarImage, state])
 
+    return rgbaImage;
+}
+
+function putImageToCanvas(rgbaImage: RgbaImage, canvas: React.RefObject<HTMLCanvasElement>) {
+    if (canvas.current) {
+        const ctx = canvas.current.getContext("2d") as CanvasRenderingContext2D;
+        ctx.putImageData(rgbaImage.imageData(), 0, 0);
+    }
+}
+
+export type ImageDisplayProps = {
+    state: State,
+}
+
+export function ImageDisplay(props: ImageDisplayProps) {
+    const { state } = props;
+
+    const container = React.useRef<HTMLDivElement>(null);
+    const canvas = React.useRef<HTMLCanvasElement>(null);
+
+    const [width, height] = useSetCanvasSizeToContainer(container, canvas);
+
+    const rgbaImage = usePerlinNoise(width, height, state);
+
     React.useEffect(() => {
-        if (canvasEl.current) {
-            const ctx = canvasEl.current.getContext("2d") as CanvasRenderingContext2D;
-            ctx.putImageData(rgbaImage.imageData(), 0, 0);
-        }
-    }, [state, rgbaImage, canvasEl])
+        putImageToCanvas(rgbaImage, canvas);
+    }, [rgbaImage, canvas, state])
 
     return (
-        <div ref={canvasContainerEl} className="w-full h-full">
-            <canvas ref={canvasEl} className="h-full"></canvas>
+        <div ref={container} className="w-full h-full">
+            <canvas ref={canvas} className="h-full"></canvas>
         </div>
     )
 }
