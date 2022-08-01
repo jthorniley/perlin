@@ -1,9 +1,69 @@
 import React from "react";
 import { State } from "../Controller";
 
-import imtools, { Perlin, ScalarImage, GradientCMap } from "imtools";
+import imtools, { Perlin, ScalarImage, GradientCMap, RgbaImage } from "imtools";
 
 await imtools()
+
+function useSetCanvasSizeToContainer(container: React.RefObject<HTMLElement>, canvas: React.RefObject<HTMLCanvasElement>) {
+    const [shape, setShape] = React.useState<[number, number]>([100, 100]);
+
+    const setContainerShape = React.useCallback((containerShape: [number, number]) => {
+        const ratio = containerShape[0] / containerShape[1];
+        const width = Math.min(800, containerShape[0]);
+        const height = width / ratio;
+        if (canvas.current) {
+            canvas.current.width = width;
+            canvas.current.height = height;
+        }
+        setShape([width, height])
+    }, [canvas])
+
+    React.useEffect(() => {
+        if (!container.current) {
+            return;
+        }
+        const el = container.current;
+        const { width, height } = el.getBoundingClientRect();
+        setContainerShape([Math.ceil(width), Math.ceil(height)]);
+
+        const { signal, abort } = new AbortController();
+        window.addEventListener("resize", () => {
+            const { width, height } = el.getBoundingClientRect();
+            setContainerShape([Math.ceil(width), Math.ceil(height)]);
+        }, { signal })
+
+        return () => {
+            abort();
+        }
+    }, [setContainerShape, container]);
+
+    return shape;
+}
+
+function usePerlinNoise(width: number, height: number, state: State) {
+    const [scalarImage, rgbaImage] = React.useMemo(() => {
+        return [new ScalarImage(width, height), new RgbaImage(width, height)]
+    }, [width, height])
+
+    React.useEffect(() => {
+        scalarImage.clear();
+        for (const layerId in state.layers) {
+            const layer = state.layers[layerId];
+            new Perlin(layer.scale, layer.amp).addToImage(scalarImage);
+        }
+        new GradientCMap().cmap(scalarImage, rgbaImage)
+    }, [scalarImage, state])
+
+    return rgbaImage;
+}
+
+function putImageToCanvas(rgbaImage: RgbaImage, canvas: React.RefObject<HTMLCanvasElement>) {
+    if (canvas.current) {
+        const ctx = canvas.current.getContext("2d") as CanvasRenderingContext2D;
+        ctx.putImageData(rgbaImage.imageData(), 0, 0);
+    }
+}
 
 export type ImageDisplayProps = {
     state: State,
@@ -11,48 +71,21 @@ export type ImageDisplayProps = {
 
 export function ImageDisplay(props: ImageDisplayProps) {
     const { state } = props;
-    const [shape, setShape] = React.useState<[number, number]>([100, 100]);
-    React.useEffect(() => {
-        const el = document.getElementById("canvasContainer")!;
-        const { width, height } = el.getBoundingClientRect();
-        setShape([Math.ceil(width), Math.ceil(height)]);
 
-        const { signal, abort } = new AbortController();
-        window.addEventListener("resize", () => {
-            const { width, height } = el.getBoundingClientRect();
-            setShape([Math.ceil(width), Math.ceil(height)]);
-        }, { signal })
+    const container = React.useRef<HTMLDivElement>(null);
+    const canvas = React.useRef<HTMLCanvasElement>(null);
 
-        return () => {
-            abort();
-        }
-    }, [setShape]);
+    const [width, height] = useSetCanvasSizeToContainer(container, canvas);
+
+    const rgbaImage = usePerlinNoise(width, height, state);
 
     React.useEffect(() => {
-        const ratio = shape[0] / shape[1];
-        const width = 500;
-        const height = width / ratio;
-        const imageGenerator = new ScalarImage(width, height);
-
-        for (const layerId in state.layers) {
-            const layer = state.layers[layerId];
-            new Perlin(layer.scale, layer.amp).addToImage(imageGenerator);
-        }
-
-        const rgbaImage = new GradientCMap().cmap(imageGenerator)
-
-        const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-        ctx.putImageData(rgbaImage.imageData(), 0, 0);
-
-    }, [state, shape])
+        putImageToCanvas(rgbaImage, canvas);
+    }, [rgbaImage, canvas, state])
 
     return (
-        <div id="canvasContainer" className="w-full h-full">
-            <canvas id="canvas" className="h-full"></canvas>
+        <div ref={container} className="w-full h-full">
+            <canvas ref={canvas} className="h-full"></canvas>
         </div>
     )
 }
