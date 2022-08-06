@@ -8,12 +8,16 @@ class Renderer {
     mesh: THREE.Mesh
     private _cancelled: boolean = false
 
-    constructor(canvas: HTMLCanvasElement) {
-        this.scene = new THREE.Scene()
-        this.camera = new THREE.OrthographicCamera(0, 200, 0, 300, -1, 1)
-        this.renderer = new THREE.WebGLRenderer({ canvas })
+    constructor(container: HTMLElement) {
+        let { width, height } = container.getBoundingClientRect();
 
-        const geom = new THREE.PlaneGeometry(200, 300)
+        this.scene = new THREE.Scene()
+        this.camera = new THREE.OrthographicCamera(-width / 2, width / 2, -height / 2, height / 2, -100, 100)
+        this.renderer = new THREE.WebGLRenderer()
+        this.renderer.setSize(width, height)
+        container.appendChild(this.renderer.domElement)
+
+        const geom = new THREE.PlaneGeometry(width, height)
         const mat = new THREE.MeshBasicMaterial(
             { color: 0x00ff00, side: THREE.DoubleSide }
         )
@@ -35,8 +39,13 @@ class Renderer {
 }
 
 export function ThreeImageDisplay() {
-    const canvasRef = React.useRef<HTMLCanvasElement>(null);
-    React.useEffect(() => new Renderer(canvasRef.current!).animate())
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => new Renderer(containerRef.current!).animate())
 
-    return <><canvas ref={canvasRef} /></>
+    return <>
+        <div className="flex flex-col justify-between h-full w-full absolute">
+            <div className="w-full h-full" ref={containerRef} />
+
+        </div>
+    </>
 }
