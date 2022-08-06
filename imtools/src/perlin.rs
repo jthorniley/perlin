@@ -11,11 +11,11 @@ use crate::image_types::{ScalarImageViewMut, ScalarPixel};
 /// result is close to `a1`, if `w` is close to 0, the result
 /// is close to `a0`.
 ///
-/// This uses the 5th order [smoothstep] function.
+/// This uses the [smoothstep] function.
 ///
-/// [smoothstep]: https://en.wikipedia.org/wiki/Smoothstep#5th-order_equation
+/// [smoothstep]: https://en.wikipedia.org/wiki/Smoothstep
 fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
-    (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0
+    return a0 + (a1 - a0) * (w * w * (3.0 - 2.0 * w));
 }
 
 /// Calculate a hash value.
