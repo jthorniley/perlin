@@ -1,7 +1,6 @@
 import React from "react";
 import { useController } from "../Controller";
 import { Controls } from "./Controls";
-import { ImageDisplay } from "./ImageDisplay";
 import { ThreeImageDisplay } from "./ThreeImageDisplay";
 
 export function Layout() {

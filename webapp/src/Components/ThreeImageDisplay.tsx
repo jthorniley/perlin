@@ -116,7 +116,7 @@ class Renderer {
 
 export function ThreeImageDisplay() {
     const containerRef = React.useRef<HTMLDivElement>(null);
-    React.useEffect(() => new Renderer(containerRef.current!).animate())
+    React.useEffect(() => new Renderer(containerRef.current!).animate(), [])
 
     return <>
         <div className="w-full h-full" ref={containerRef} />
