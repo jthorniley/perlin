@@ -18,7 +18,7 @@ export function Layout() {
                 </div>
             </div>
             <div className="flex-grow overflow-hidden">
-                <ThreeImageDisplay />
+                <ThreeImageDisplay state={state} />
             </div>
         </div>
     )
