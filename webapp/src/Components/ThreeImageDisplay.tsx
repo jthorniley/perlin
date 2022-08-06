@@ -1,5 +1,8 @@
 import React from "react"
 import * as THREE from "three";
+import imtools, { ScalarImage, Perlin, GradientCMap, RgbaImage } from "imtools";
+
+await imtools();
 
 class Renderer {
     scene: THREE.Scene
@@ -18,8 +21,21 @@ class Renderer {
         container.appendChild(this.renderer.domElement)
 
         const geom = new THREE.PlaneGeometry(width, height)
+
+        const image = new ScalarImage(width, height);
+        const output = new RgbaImage(width, height);
+        const perlin = new Perlin(100, 1);
+        const cmap = new GradientCMap();
+
+        perlin.addToImage(image);
+        cmap.cmap(image, output);
+
+        const data = output.array();
+        const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat)
+        texture.needsUpdate = true;
+
         const mat = new THREE.MeshBasicMaterial(
-            { color: 0x00ff00, side: THREE.DoubleSide }
+            { side: THREE.DoubleSide, map: texture }
         )
         this.mesh = new THREE.Mesh(geom, mat)
         this.scene.add(this.mesh)

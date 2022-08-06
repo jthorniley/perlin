@@ -3,6 +3,7 @@ use crate::prelude::*;
 use ndarray::prelude::*;
 use palette::gradient::named::VIRIDIS;
 
+use js_sys::Uint8Array;
 use wasm_bindgen::{prelude::*, Clamped};
 use web_sys::ImageData;
 
@@ -50,6 +51,13 @@ impl RgbaImage {
             self.data.dim().1 as u32,
         )
         .unwrap()
+    }
+
+    #[wasm_bindgen]
+    pub fn array(&self) -> Uint8Array {
+        let arr = Uint8Array::new_with_length((self.data.len() * 4) as u32);
+        arr.copy_from(self.data.as_flat_slice());
+        arr
     }
 
     #[wasm_bindgen(getter)]
