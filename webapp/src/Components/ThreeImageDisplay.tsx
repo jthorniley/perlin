@@ -1,37 +1,42 @@
 import React from "react"
 import * as THREE from "three";
 
+class Renderer {
+    scene: THREE.Scene
+    camera: THREE.OrthographicCamera
+    renderer: THREE.WebGLRenderer
+    mesh: THREE.Mesh
+    private _cancelled: boolean = false
+
+    constructor(canvas: HTMLCanvasElement) {
+        this.scene = new THREE.Scene()
+        this.camera = new THREE.OrthographicCamera(0, 200, 0, 300, -1, 1)
+        this.renderer = new THREE.WebGLRenderer({ canvas })
+
+        const geom = new THREE.PlaneGeometry(200, 300)
+        const mat = new THREE.MeshBasicMaterial(
+            { color: 0x00ff00, side: THREE.DoubleSide }
+        )
+        this.mesh = new THREE.Mesh(geom, mat)
+        this.scene.add(this.mesh)
+    }
+
+    animate() {
+        this.renderer.render(this.scene, this.camera)
+        if (!this._cancelled) {
+            requestAnimationFrame(() => this.animate())
+        }
+        return () => this.cancel()
+    }
+
+    cancel() {
+        this._cancelled = true
+    }
+}
+
 export function ThreeImageDisplay() {
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
-
-    React.useEffect(() => {
-        if (canvasRef.current === null) {
-            return;
-        }
-        const scene = new THREE.Scene()
-        const camera = new THREE.OrthographicCamera(0, 200, 0, 300, -10, 10)
-        const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current })
-        const geometry = new THREE.PlaneGeometry(200, 300)
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
-        const cube = new THREE.Mesh(geometry, material)
-        cube.translateY(150)
-        cube.translateX(100)
-        scene.add(cube);
-
-        let cancel = false;
-        function animate() {
-            if (cancel) {
-                return;
-            }
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        }
-
-        animate();
-        return () => {
-            cancel = true;
-        }
-    }, [canvasRef])
+    React.useEffect(() => new Renderer(canvasRef.current!).animate())
 
     return <><canvas ref={canvasRef} /></>
 }
