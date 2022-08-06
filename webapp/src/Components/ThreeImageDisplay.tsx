@@ -82,12 +82,12 @@ class Renderer {
             this._renderer.setSize(width, height)
         }
 
-        const { signal, abort } = new AbortController();
+        const controller = new AbortController();
         window.addEventListener("resize", () => {
             resize()
-        }, { signal })
+        }, { signal: controller.signal })
         resize();
-        this._abortResize = abort;
+        this._abortResize = () => controller.abort();
     }
 
 
@@ -119,9 +119,6 @@ export function ThreeImageDisplay() {
     React.useEffect(() => new Renderer(containerRef.current!).animate())
 
     return <>
-        <div className="flex flex-col justify-between h-full w-full absolute">
-            <div className="w-full h-full" ref={containerRef} />
-
-        </div>
+        <div className="w-full h-full" ref={containerRef} />
     </>
 }

@@ -2,6 +2,7 @@ import React from "react";
 import { useController } from "../Controller";
 import { Controls } from "./Controls";
 import { ImageDisplay } from "./ImageDisplay";
+import { ThreeImageDisplay } from "./ThreeImageDisplay";
 
 export function Layout() {
     const { state, reducer } = useController();
@@ -18,7 +19,7 @@ export function Layout() {
                 </div>
             </div>
             <div className="flex-grow overflow-hidden">
-                <ImageDisplay state={state} />
+                <ThreeImageDisplay />
             </div>
         </div>
     )
